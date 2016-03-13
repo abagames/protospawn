@@ -1,13 +1,13 @@
 protospawn
 ======================
 
-Game prototyping library powerd by the es2015 [proxy](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Proxy) and [generator](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Generator)
+Game prototyping library powerd by the es2015 [proxy](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Proxy) and [generator](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Generator)
 
 WIP
 
 ### Sample code
 
-(code.ts)[https://github.com/abagames/protospawn/blob/master/src/code.ts]
+[code.ts](https://github.com/abagames/protospawn/blob/master/src/code.ts)
 
 ```
         ps.ply();
