@@ -45,8 +45,9 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(1);
+	__webpack_require__(9);
 	__webpack_require__(7);
-	__webpack_require__(6);
+	__webpack_require__(8);
 	module.exports = __webpack_require__(4);
 
 
@@ -57,7 +58,7 @@
 	"use strict";
 	const _ = __webpack_require__(2);
 	const protospawn_1 = __webpack_require__(4);
-	const mech_1 = __webpack_require__(6);
+	const mech_1 = __webpack_require__(7);
 	class Actor {
 	    constructor(name) {
 	        this.name = name;
@@ -75,7 +76,7 @@
 	        this.draw = () => protospawn_1.p5js.rect(this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height);
 	        this.waitingTicks = 0;
 	        this.isAlive = true;
-	        this.removeIfOut = new mech_1.default.ScreenPos.Remove().set({ padding: 100 });
+	        this.removeIfOut = new mech_1.default.EndOfScreen.Remove().set({ padding: 100 });
 	        _.forEach(Actor.groups, (group) => {
 	            if (group.name === name) {
 	                this.group = group;
@@ -15282,12 +15283,12 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	let p5 = __webpack_require__(5);
-	let p5Collide = __webpack_require__(8);
+	const p5 = __webpack_require__(5);
+	const p5Collide = __webpack_require__(6);
 	const actor_1 = __webpack_require__(1);
-	const mech_1 = __webpack_require__(6);
-	const p5util_1 = __webpack_require__(9);
-	const code_1 = __webpack_require__(7);
+	const mech_1 = __webpack_require__(7);
+	const p5util_1 = __webpack_require__(8);
+	const code_1 = __webpack_require__(9);
 	exports.mech = mech_1.default;
 	window.onload = () => {
 	    new p5((_p5js) => {
@@ -45113,260 +45114,6 @@
 
 /***/ },
 /* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const _ = __webpack_require__(2);
-	let p5 = __webpack_require__(5);
-	const protospawn_1 = __webpack_require__(4);
-	const actor_1 = __webpack_require__(1);
-	class Mech {
-	    set(json) {
-	        protospawn_1.p5js.setFromJsonToObj(this, json);
-	        return this;
-	    }
-	}
-	(function (Mech) {
-	    var AvatarMove;
-	    (function (AvatarMove) {
-	        class Direction extends Mech {
-	            constructor(...args) {
-	                super(...args);
-	                this.speed = 1;
-	                this.isHorizontal = true;
-	                this.isVertical = true;
-	            }
-	            update(a) {
-	                let s = protospawn_1.p5js.getStick();
-	                if (!this.isHorizontal) {
-	                    s.x = 0;
-	                }
-	                if (!this.isVertical) {
-	                    s.y = 0;
-	                }
-	                a.vel = s.mult(this.speed);
-	            }
-	        }
-	        AvatarMove.Direction = Direction;
-	        class Rotation extends Mech {
-	            constructor(...args) {
-	                super(...args);
-	                this.speed = 1;
-	                this.angleSpeed = 1;
-	            }
-	            update(a) {
-	                this.move(a, protospawn_1.p5js.getStick());
-	            }
-	            move(a, s) {
-	                a.angle += s.x * this.angleSpeed;
-	                a.speed = -s.y * this.speed;
-	            }
-	        }
-	        AvatarMove.Rotation = Rotation;
-	    })(AvatarMove = Mech.AvatarMove || (Mech.AvatarMove = {}));
-	    var AvatarInput;
-	    (function (AvatarInput) {
-	        class ButtonPressed extends Mech {
-	            constructor(...args) {
-	                super(...args);
-	                this.isPressed = false;
-	            }
-	            update(a) {
-	                if (protospawn_1.p5js.isKeysDown(protospawn_1.p5js.keyCodes.button)) {
-	                    if (!this.isPressed) {
-	                        this.isPressed = true;
-	                        this.do(a);
-	                    }
-	                }
-	                else {
-	                    this.isPressed = false;
-	                }
-	            }
-	        }
-	        AvatarInput.ButtonPressed = ButtonPressed;
-	    })(AvatarInput = Mech.AvatarInput || (Mech.AvatarInput = {}));
-	    var ScreenPos;
-	    (function (ScreenPos) {
-	        class Clamp extends Mech {
-	            update(a) {
-	                a.pos.clamp(0, protospawn_1.p5js.width, 0, protospawn_1.p5js.height);
-	            }
-	        }
-	        ScreenPos.Clamp = Clamp;
-	        class Remove extends Mech {
-	            constructor(...args) {
-	                super(...args);
-	                this.padding = 10;
-	            }
-	            update(a) {
-	                if (!a.pos.isIn(0, protospawn_1.p5js.width, 0, protospawn_1.p5js.height, this.padding)) {
-	                    a.remove();
-	                }
-	            }
-	        }
-	        ScreenPos.Remove = Remove;
-	        class Bounce extends Mech {
-	            update(a) {
-	                if ((a.pos.x < 0 && a.vel.x < 0) || (a.pos.x > protospawn_1.p5js.width && a.vel.x > 0)) {
-	                    a.vel.x *= -1;
-	                }
-	                if ((a.pos.y < 0 && a.vel.y < 0) || (a.pos.y > protospawn_1.p5js.height && a.vel.y > 0)) {
-	                    a.vel.y *= -1;
-	                }
-	            }
-	        }
-	        ScreenPos.Bounce = Bounce;
-	    })(ScreenPos = Mech.ScreenPos || (Mech.ScreenPos = {}));
-	    var Event;
-	    (function (Event) {
-	        class Random extends Mech {
-	            constructor(...args) {
-	                super(...args);
-	                this.probability = 0.01;
-	            }
-	            update(a) {
-	                if (protospawn_1.p5js.random() <= this.probability) {
-	                    this.do(a);
-	                }
-	            }
-	        }
-	        Event.Random = Random;
-	    })(Event = Mech.Event || (Mech.Event = {}));
-	    var Collision;
-	    (function (Collision) {
-	        class Test extends Mech {
-	            update(a) {
-	                let others = actor_1.default.get(this.name);
-	                _.forEach(others, (other) => {
-	                    if (a.testCollision(other)) {
-	                        this.do(a, other);
-	                    }
-	                });
-	            }
-	        }
-	        Collision.Test = Test;
-	        class TestAndRemove extends Test {
-	            constructor() {
-	                super();
-	                this.do = (self, other) => self.remove();
-	            }
-	        }
-	        Collision.TestAndRemove = TestAndRemove;
-	        class TestAndRemoveOther extends Test {
-	            constructor() {
-	                super();
-	                this.do = (self, other) => other.remove();
-	            }
-	        }
-	        Collision.TestAndRemoveOther = TestAndRemoveOther;
-	        class TestAndRemoveBoth extends Test {
-	            constructor() {
-	                super();
-	                this.do = (self, other) => {
-	                    self.remove();
-	                    other.remove();
-	                };
-	            }
-	        }
-	        Collision.TestAndRemoveBoth = TestAndRemoveBoth;
-	    })(Collision = Mech.Collision || (Mech.Collision = {}));
-	    var Condition;
-	    (function (Condition) {
-	        class LimitActorCount extends Mech {
-	            constructor(...args) {
-	                super(...args);
-	                this.max = 1;
-	            }
-	            update(a) {
-	                _.forEach(_.isArray(this.name) ? this.name : [this.name], (n) => actor_1.default.get(n).splice(this.max));
-	            }
-	        }
-	        Condition.LimitActorCount = LimitActorCount;
-	    })(Condition = Mech.Condition || (Mech.Condition = {}));
-	})(Mech || (Mech = {}));
-	exports.default = Mech;
-
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const protospawn_1 = __webpack_require__(4);
-	function setPsCode() {
-	    protospawn_1.protoSpawn.main = function* () {
-	        this.set({ mechs: [
-	                new protospawn_1.mech.Condition.LimitActorCount().set({ name: ['exploderPly', 'exploderEnm'] })
-	            ] });
-	        protospawn_1.protoSpawn.ply();
-	        protospawn_1.protoSpawn.enm();
-	    };
-	    protospawn_1.protoSpawn.ply = function* (x = 50) {
-	        this.set({ pos: { x: x, y: 90 }, size: 7, mechs: [
-	                new protospawn_1.mech.AvatarMove.Direction().set({ speed: 2, isVertical: false }),
-	                new protospawn_1.mech.ScreenPos.Clamp(),
-	                new protospawn_1.mech.Collision.Test().set({ name: ['bulletEnm', 'explosion'], do: (s, o) => {
-	                        s.remove();
-	                        protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ply, [this.pos.x]);
-	                    } }),
-	                new protospawn_1.mech.AvatarInput.ButtonPressed().set({ do: () => {
-	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: -protospawn_1.p5js.HALF_PI, name: 'bulletPly' });
-	                        protospawn_1.protoSpawn.exploder({ pos: this.pos, vel: { y: -5 }, name: 'exploderPly' });
-	                    } })
-	            ] });
-	    };
-	    protospawn_1.protoSpawn.enm = function* () {
-	        this.set({
-	            pos: { x: protospawn_1.p5js.random(0, 100), y: 10 },
-	            vel: { x: protospawn_1.p5js.randomPlusMinus() * 2, y: 0 },
-	            size: 7,
-	            mechs: [
-	                new protospawn_1.mech.Event.Random().set({ probability: 0.02, do: (a) => a.vel.x *= -1 }),
-	                new protospawn_1.mech.ScreenPos.Bounce(),
-	                new protospawn_1.mech.Collision.Test().set({ name: ['bulletPly', 'explosion'], do: (s, o) => {
-	                        s.remove();
-	                        protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.enm);
-	                    } }),
-	                new protospawn_1.mech.Event.Random().set({ probability: 0.05, do: (a) => {
-	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: protospawn_1.p5js.HALF_PI, name: 'bulletEnm' });
-	                        protospawn_1.protoSpawn.exploder({ pos: this.pos, vel: { y: 5 }, name: 'exploderEnm' });
-	                    } }),
-	            ] });
-	    };
-	    protospawn_1.protoSpawn.bullet = function* (prop) {
-	        this.set(prop);
-	        this.speed = this.size = 3;
-	        this.mechs = [
-	            new protospawn_1.mech.Collision.TestAndRemove().set({ name: 'explosion' })
-	        ];
-	    };
-	    protospawn_1.protoSpawn.exploder = function* (prop) {
-	        this.set(prop);
-	        for (let i = 0; i < 30; i++) {
-	            this.vel.y *= 0.94;
-	            yield;
-	        }
-	        protospawn_1.protoSpawn.explosion({ pos: this.pos });
-	        this.remove();
-	    };
-	    protospawn_1.protoSpawn.explosion = function* (prop) {
-	        this.set(prop);
-	        for (let i = 0; i < 15; i++) {
-	            this.size += 2;
-	            yield;
-	        }
-	        for (let i = 0; i < 15; i++) {
-	            this.size -= 2;
-	            yield;
-	        }
-	        this.remove();
-	    };
-	}
-	exports.default = setPsCode;
-
-
-/***/ },
-/* 8 */
 /***/ function(module, exports) {
 
 	/*
@@ -45763,7 +45510,183 @@
 
 
 /***/ },
-/* 9 */
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const _ = __webpack_require__(2);
+	const p5 = __webpack_require__(5);
+	const protospawn_1 = __webpack_require__(4);
+	const actor_1 = __webpack_require__(1);
+	class Mech {
+	    set(json) {
+	        protospawn_1.p5js.setFromJsonToObj(this, json);
+	        return this;
+	    }
+	}
+	(function (Mech) {
+	    var AvatarMove;
+	    (function (AvatarMove) {
+	        class Direction extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.speed = 1;
+	                this.isHorizontal = true;
+	                this.isVertical = true;
+	            }
+	            update(a) {
+	                let s = protospawn_1.p5js.getStick();
+	                if (!this.isHorizontal) {
+	                    s.x = 0;
+	                }
+	                if (!this.isVertical) {
+	                    s.y = 0;
+	                }
+	                a.vel = s.mult(this.speed);
+	            }
+	        }
+	        AvatarMove.Direction = Direction;
+	        class Rotation extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.speed = 1;
+	                this.angleSpeed = 1;
+	            }
+	            update(a) {
+	                this.move(a, protospawn_1.p5js.getStick());
+	            }
+	            move(a, s) {
+	                a.angle += s.x * this.angleSpeed;
+	                a.speed = -s.y * this.speed;
+	            }
+	        }
+	        AvatarMove.Rotation = Rotation;
+	    })(AvatarMove = Mech.AvatarMove || (Mech.AvatarMove = {}));
+	    var AvatarInput;
+	    (function (AvatarInput) {
+	        class ButtonPressed extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.isPressed = false;
+	            }
+	            update(a) {
+	                if (protospawn_1.p5js.isKeysDown(protospawn_1.p5js.keyCodes.button)) {
+	                    if (!this.isPressed) {
+	                        this.isPressed = true;
+	                        this.do(a);
+	                    }
+	                }
+	                else {
+	                    this.isPressed = false;
+	                }
+	            }
+	        }
+	        AvatarInput.ButtonPressed = ButtonPressed;
+	    })(AvatarInput = Mech.AvatarInput || (Mech.AvatarInput = {}));
+	    var EndOfScreen;
+	    (function (EndOfScreen) {
+	        class Clamp extends Mech {
+	            update(a) {
+	                a.pos.clamp(0, protospawn_1.p5js.width, 0, protospawn_1.p5js.height);
+	            }
+	        }
+	        EndOfScreen.Clamp = Clamp;
+	        class Remove extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.padding = 10;
+	            }
+	            update(a) {
+	                if (!a.pos.isIn(0, protospawn_1.p5js.width, 0, protospawn_1.p5js.height, this.padding)) {
+	                    a.remove();
+	                }
+	            }
+	        }
+	        EndOfScreen.Remove = Remove;
+	        class Bounce extends Mech {
+	            update(a) {
+	                if ((a.pos.x < 0 && a.vel.x < 0) || (a.pos.x > protospawn_1.p5js.width && a.vel.x > 0)) {
+	                    a.vel.x *= -1;
+	                }
+	                if ((a.pos.y < 0 && a.vel.y < 0) || (a.pos.y > protospawn_1.p5js.height && a.vel.y > 0)) {
+	                    a.vel.y *= -1;
+	                }
+	            }
+	        }
+	        EndOfScreen.Bounce = Bounce;
+	    })(EndOfScreen = Mech.EndOfScreen || (Mech.EndOfScreen = {}));
+	    var Event;
+	    (function (Event) {
+	        class Random extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.probability = 0.01;
+	            }
+	            update(a) {
+	                if (protospawn_1.p5js.random() <= this.probability) {
+	                    this.do(a);
+	                }
+	            }
+	        }
+	        Event.Random = Random;
+	    })(Event = Mech.Event || (Mech.Event = {}));
+	    var Collision;
+	    (function (Collision) {
+	        class Test extends Mech {
+	            update(a) {
+	                let others = actor_1.default.get(this.name);
+	                _.forEach(others, (other) => {
+	                    if (a.testCollision(other)) {
+	                        this.do(a, other);
+	                    }
+	                });
+	            }
+	        }
+	        Collision.Test = Test;
+	        class TestAndRemove extends Test {
+	            constructor() {
+	                super();
+	                this.do = (self, other) => self.remove();
+	            }
+	        }
+	        Collision.TestAndRemove = TestAndRemove;
+	        class TestAndRemoveOther extends Test {
+	            constructor() {
+	                super();
+	                this.do = (self, other) => other.remove();
+	            }
+	        }
+	        Collision.TestAndRemoveOther = TestAndRemoveOther;
+	        class TestAndRemoveBoth extends Test {
+	            constructor() {
+	                super();
+	                this.do = (self, other) => {
+	                    self.remove();
+	                    other.remove();
+	                };
+	            }
+	        }
+	        Collision.TestAndRemoveBoth = TestAndRemoveBoth;
+	    })(Collision = Mech.Collision || (Mech.Collision = {}));
+	    var Condition;
+	    (function (Condition) {
+	        class LimitActorCount extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.max = 1;
+	            }
+	            update(a) {
+	                _.forEach(_.isArray(this.name) ? this.name : [this.name], (n) => actor_1.default.get(n).splice(this.max));
+	            }
+	        }
+	        Condition.LimitActorCount = LimitActorCount;
+	    })(Condition = Mech.Condition || (Mech.Condition = {}));
+	})(Mech || (Mech = {}));
+	exports.default = Mech;
+
+
+/***/ },
+/* 8 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -45810,9 +45733,12 @@
 	    p5.prototype.isIn = function (v, min = 0, max = 1, padding = 0) {
 	        return (v >= min - padding && v <= max + padding);
 	    };
-	    const button1KeyCodes = [90, 190, 32, 13];
-	    const button2KeyCodes = [88, 191, 16, 18];
-	    const buttonKeyCodes = button1KeyCodes.concat(button2KeyCodes);
+	    const button1KeyCodes = [90, 191, 32, 13];
+	    const button2KeyCodes = [88, 190, 17];
+	    const button3KeyCodes = [67, 188, 16];
+	    const button4KeyCodes = [86, 77];
+	    const buttonKeyCodes = button1KeyCodes.
+	        concat(button2KeyCodes).concat(button3KeyCodes).concat(button4KeyCodes);
 	    p5.prototype.keyCodes = {
 	        up: [38, 87, 73, 104],
 	        right: [39, 68, 76, 102],
@@ -45820,6 +45746,8 @@
 	        left: [37, 65, 74, 100],
 	        button1: button1KeyCodes,
 	        button2: button2KeyCodes,
+	        button3: button3KeyCodes,
+	        button4: button4KeyCodes,
 	        button: buttonKeyCodes,
 	        pause: [80, 27]
 	    };
@@ -45883,6 +45811,84 @@
 	    };
 	}
 	exports.default = p5Util;
+
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const protospawn_1 = __webpack_require__(4);
+	function setPsCode() {
+	    protospawn_1.protoSpawn.main = function* () {
+	        this.set({ mechs: [
+	                new protospawn_1.mech.Condition.LimitActorCount().set({ name: ['exploderPly', 'exploderEnm'] })
+	            ] });
+	        protospawn_1.protoSpawn.ply();
+	        protospawn_1.protoSpawn.enm();
+	    };
+	    protospawn_1.protoSpawn.ply = function* (x = 50) {
+	        this.set({ pos: { x: x, y: 90 }, size: 7, mechs: [
+	                new protospawn_1.mech.AvatarMove.Direction().set({ speed: 2, isVertical: false }),
+	                new protospawn_1.mech.EndOfScreen.Clamp(),
+	                new protospawn_1.mech.Collision.Test().set({ name: ['bulletEnm', 'explosion'], do: (s, o) => {
+	                        s.remove();
+	                        protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ply, [this.pos.x]);
+	                    } }),
+	                new protospawn_1.mech.AvatarInput.ButtonPressed().set({ do: () => {
+	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: -protospawn_1.p5js.HALF_PI, name: 'bulletPly' });
+	                        protospawn_1.protoSpawn.exploder({ pos: this.pos, vel: { y: -5 }, name: 'exploderPly' });
+	                    } })
+	            ] });
+	    };
+	    protospawn_1.protoSpawn.enm = function* () {
+	        this.set({
+	            pos: { x: protospawn_1.p5js.random(0, 100), y: 10 },
+	            vel: { x: protospawn_1.p5js.randomPlusMinus() * 2, y: 0 },
+	            size: 7,
+	            mechs: [
+	                new protospawn_1.mech.Event.Random().set({ probability: 0.02, do: (a) => a.vel.x *= -1 }),
+	                new protospawn_1.mech.EndOfScreen.Bounce(),
+	                new protospawn_1.mech.Collision.Test().set({ name: ['bulletPly', 'explosion'], do: (s, o) => {
+	                        s.remove();
+	                        protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.enm);
+	                    } }),
+	                new protospawn_1.mech.Event.Random().set({ probability: 0.05, do: (a) => {
+	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: protospawn_1.p5js.HALF_PI, name: 'bulletEnm' });
+	                        protospawn_1.protoSpawn.exploder({ pos: this.pos, vel: { y: 5 }, name: 'exploderEnm' });
+	                    } }),
+	            ] });
+	    };
+	    protospawn_1.protoSpawn.bullet = function* (prop) {
+	        this.set(prop);
+	        this.speed = this.size = 3;
+	        this.mechs = [
+	            new protospawn_1.mech.Collision.TestAndRemove().set({ name: 'explosion' })
+	        ];
+	    };
+	    protospawn_1.protoSpawn.exploder = function* (prop) {
+	        this.set(prop);
+	        for (let i = 0; i < 30; i++) {
+	            this.vel.y *= 0.94;
+	            yield;
+	        }
+	        protospawn_1.protoSpawn.explosion({ pos: this.pos });
+	        this.remove();
+	    };
+	    protospawn_1.protoSpawn.explosion = function* (prop) {
+	        this.set(prop);
+	        for (let i = 0; i < 15; i++) {
+	            this.size += 2;
+	            yield;
+	        }
+	        for (let i = 0; i < 15; i++) {
+	            this.size -= 2;
+	            yield;
+	        }
+	        this.remove();
+	    };
+	}
+	exports.default = setPsCode;
 
 
 /***/ }

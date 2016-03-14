@@ -2,7 +2,7 @@ function p5Util(p5, p: p5) {
     p5.prototype.vector = function(x: number = 0, y: number = 0) {
         return new p5.Vector(x, y);
     }
-    p5.prototype.vectorFromAngle = function (angle: number): p5.Vector {
+    p5.prototype.vectorFromAngle = function(angle: number): p5.Vector {
         return p5.Vector.fromAngle(angle);
     }
     p5.prototype.angleBetween = function(v1: p5.Vector, v2: p5.Vector): number {
@@ -38,18 +38,23 @@ function p5Util(p5, p: p5) {
     p5.prototype.isIn = function(v: number, min: number = 0, max: number = 1, padding: number = 0): boolean {
         return (v >= min - padding && v <= max + padding);
     }
-    const button1KeyCodes = [90, 190, 32, 13];
-    const button2KeyCodes =  [88, 191, 16, 18];
-    const buttonKeyCodes = button1KeyCodes.concat(button2KeyCodes);
+    const button1KeyCodes = [90, 191, 32, 13];
+    const button2KeyCodes = [88, 190, 17];
+    const button3KeyCodes = [67, 188, 16];
+    const button4KeyCodes = [86, 77];
+    const buttonKeyCodes = button1KeyCodes.
+        concat(button2KeyCodes).concat(button3KeyCodes).concat(button4KeyCodes);
     p5.prototype.keyCodes = {
         up: [38, 87, 73, 104],
         right: [39, 68, 76, 102],
-		down: [40, 83, 75, 101, 98],
-		left: [37, 65, 74, 100],
-		button1: button1KeyCodes,
-		button2: button2KeyCodes,
-		button: buttonKeyCodes,
-		pause: [80, 27]
+        down: [40, 83, 75, 101, 98],
+        left: [37, 65, 74, 100],
+        button1: button1KeyCodes,
+        button2: button2KeyCodes,
+        button3: button3KeyCodes,
+        button4: button4KeyCodes,
+        button: buttonKeyCodes,
+        pause: [80, 27]
     };
     p5.prototype.getStick = function(): p5.Vector {
         let stick = new p5.Vector();
