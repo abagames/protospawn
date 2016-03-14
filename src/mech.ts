@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 declare const require: any;
-let p5 = require('p5');
+const p5 = require('p5');
 import {p5js as p} from './protospawn';
 import Actor from './actor';
 

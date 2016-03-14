@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 declare const require: any;
-let p5 = require('p5');
-let p5Collide = require('p5-collide2d/p5.collide2d');
+const p5 = require('p5');
+const p5Collide = require('p5-collide2d/p5.collide2d');
 import Actor from './actor';
 import Mech from './mech';
 import p5Util from './p5util';
