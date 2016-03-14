@@ -11,7 +11,7 @@ function setPsCode() {
     ps.ply = function*(x = 50) {
         this.set({pos: {x, y: 90}, size: 7, mechs: [
             new m.AvatarMove.Direction().set({speed: 2, isVertical: false}),
-            new m.ScreenPos.Clamp(),
+            new m.EndOfScreen.Clamp(),
             new m.Collision.Test().set({name: ['bulletEnm', 'explosion'], do: (s, o) => {
                 s.remove();
                 ps.delaySpawn(30, ps.ply, [this.pos.x]);
@@ -29,7 +29,7 @@ function setPsCode() {
             size: 7, 
             mechs: [
             new m.Event.Random().set({probability: 0.02, do: (a) => a.vel.x *= -1 }),
-            new m.ScreenPos.Bounce(),
+            new m.EndOfScreen.Bounce(),
             new m.Collision.Test().set({name: ['bulletPly', 'explosion'], do: (s, o) => {
                 s.remove();
                 ps.delaySpawn(30, ps.enm)

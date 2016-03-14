@@ -23,7 +23,7 @@ class Actor {
     generator: any;
     waitingTicks = 0;
     isAlive = true;
-    removeIfOut = new Mech.ScreenPos.Remove().set({ padding: 100 });
+    removeIfOut = new Mech.EndOfScreen.Remove().set({ padding: 100 });
     group: Actor.Group;
 
     remove() {

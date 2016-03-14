@@ -65,7 +65,7 @@ module Mech {
         }
     }
 
-    export module ScreenPos {
+    export module EndOfScreen {
         export class Clamp extends Mech {
             update(a: Actor) {
                 a.pos.clamp(0, p.width, 0, p.height);
