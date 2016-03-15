@@ -17,8 +17,13 @@ class Actor {
         p.collideRectRect
             (this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height,
             other.pos.x - other.width / 2, other.pos.y - other.height / 2, other.width, other.height);
-    draw = () => p.rect
-        (this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height);
+    stroke = 'black';
+    fill = 'white';
+    draw = () => {
+        p.stroke(this.stroke)
+        p.fill(this.fill);
+        p.rect(this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height);
+    };
 
     generator: any;
     waitingTicks = 0;

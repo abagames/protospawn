@@ -58,6 +58,7 @@ function setPsCode() {
     }
     ps.explosion = function*(prop) {
         this.set(prop);
+        this.stroke = 'red';
         for (let i = 0; i < 15; i++) {
             this.size += 2;
             yield;

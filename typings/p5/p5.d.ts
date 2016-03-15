@@ -18,9 +18,10 @@ declare class p5 {
     draw();
     createCanvas(width: number, height: number, option?: any);
     background(r: number | string, g?: number, b?: number);
-    stroke(r: number, g?: number, b?: number);
-    fill(r: number, g?: number, b?: number);
+    stroke(r: number | string, g?: number, b?: number);
+    fill(r: number | string, g?: number, b?: number);
     noFill();
+    color(r: number | string, g?: number, b?: number);
     ellipse(x: number, y: number, width: number, height: number);
     rect(x: number, y: number, width: number, height: number);
     line(x1: number, y1: number, x2: number, y2: number);
