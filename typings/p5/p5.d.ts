@@ -53,7 +53,7 @@ declare class p5 {
     wrap(v: number, min?: number, max?: number): number;
     normalizeAngle(v: number): number;
     isIn(v: number, min?: number, max?: number, padding?: number): boolean;
-    keyCodes: any;
+    key: any;
     getStick(): p5.Vector;
     isKeysDown(keyCodes: number[]): boolean;
     setFromJsonToObj(obj: any, json: any, deepCount?: number);

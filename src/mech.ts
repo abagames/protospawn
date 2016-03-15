@@ -53,7 +53,7 @@ module Mech {
             isPressed = false;
 
             update(a: Actor) {
-                if (p.isKeysDown(p.keyCodes.button)) {
+                if (p.isKeysDown(p.key.button)) {
                     if (!this.isPressed) {
                         this.isPressed = true;
                         this.do(a);
