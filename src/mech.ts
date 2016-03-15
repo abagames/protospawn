@@ -53,7 +53,7 @@ module Mech {
             do: (a: Actor) => void;
             interval: number = 1;
             ticks = 0;
-            
+
             update(a: Actor) {
                 if (p.isKeysDown(this.key)) {
                     this.ticks--;
@@ -64,13 +64,13 @@ module Mech {
                 }
             }
         }
-        
+
         export class KeyUp extends Mech {
             key = p.Key.button;
             do: (a: Actor) => void;
             interval: number = 1;
             ticks = 0;
-            
+
             update(a: Actor) {
                 if (!p.isKeysDown(this.key)) {
                     this.ticks--;
@@ -81,7 +81,7 @@ module Mech {
                 }
             }
         }
-        
+
         export class KeyPressed extends Mech {
             key = p.Key.button;
             do: (a: Actor) => void;
@@ -147,6 +147,14 @@ module Mech {
     }
 
     export module Event {
+        export class EveryFrame extends Mech {
+            do: (a: Actor) => void;
+
+            update(a: Actor) {
+                this.do(a);
+            }
+        }
+
         export class Random extends Mech {
             probability = 0.01;
             do: (a: Actor) => void;
