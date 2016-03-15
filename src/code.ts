@@ -16,7 +16,7 @@ function setPsCode() {
                 s.remove();
                 ps.delaySpawn(30, ps.ply, [this.pos.x]);
             }}),
-            new m.AvatarInput.ButtonPressed().set({do: () => {
+            new m.AvatarInput.KeyPressed().set({do: () => {
                 ps.bullet({pos: this.pos, angle: -p.HALF_PI, name: 'bulletPly'});
                 ps.exploder({pos: this.pos, vel: {y: -5}, name: 'exploderPly'});
             }})

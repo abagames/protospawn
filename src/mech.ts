@@ -48,18 +48,70 @@ module Mech {
     }
 
     export module AvatarInput {
-        export class ButtonPressed extends Mech {
+        export class KeyDown extends Mech {
+            key = p.Key.button;
+            do: (a: Actor) => void;
+            interval: number = 1;
+            ticks = 0;
+            
+            update(a: Actor) {
+                if (p.isKeysDown(this.key)) {
+                    this.ticks--;
+                    if (this.ticks <= 0) {
+                        this.do(a);
+                        this.ticks = this.interval;
+                    }
+                }
+            }
+        }
+        
+        export class KeyUp extends Mech {
+            key = p.Key.button;
+            do: (a: Actor) => void;
+            interval: number = 1;
+            ticks = 0;
+            
+            update(a: Actor) {
+                if (!p.isKeysDown(this.key)) {
+                    this.ticks--;
+                    if (this.ticks <= 0) {
+                        this.do(a);
+                        this.ticks = this.interval;
+                    }
+                }
+            }
+        }
+        
+        export class KeyPressed extends Mech {
+            key = p.Key.button;
             do: (a: Actor) => void;
             isPressed = false;
 
             update(a: Actor) {
-                if (p.isKeysDown(p.key.button)) {
+                if (p.isKeysDown(this.key)) {
                     if (!this.isPressed) {
                         this.isPressed = true;
                         this.do(a);
                     }
                 } else {
                     this.isPressed = false;
+                }
+            }
+        }
+
+        export class KeyReleased extends Mech {
+            key = p.Key.button;
+            do: (a: Actor) => void;
+            isPressed = false;
+
+            update(a: Actor) {
+                if (p.isKeysDown(this.key)) {
+                    this.isPressed = true;
+                } else {
+                    if (this.isPressed) {
+                        this.isPressed = false;
+                        this.do(a);
+                    }
                 }
             }
         }

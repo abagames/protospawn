@@ -44,7 +44,7 @@ function p5Util(p5, p: p5) {
     const button4KeyCodes = [86, 77];
     const buttonKeyCodes = button1KeyCodes.
         concat(button2KeyCodes).concat(button3KeyCodes).concat(button4KeyCodes);
-    p5.prototype.key = {
+    p5.prototype.Key = {
         up: [38, 87, 73, 104],
         right: [39, 68, 76, 102],
         down: [40, 83, 75, 101, 98],
@@ -58,16 +58,16 @@ function p5Util(p5, p: p5) {
     };
     p5.prototype.getStick = function(): p5.Vector {
         let stick = new p5.Vector();
-        if (p.isKeysDown(p.key.up)) {
+        if (p.isKeysDown(p.Key.up)) {
             stick.y = -1;
         }
-        if (p.isKeysDown(p.key.right)) {
+        if (p.isKeysDown(p.Key.right)) {
             stick.x = 1;
         }
-        if (p.isKeysDown(p.key.down)) {
+        if (p.isKeysDown(p.Key.down)) {
             stick.y = 1;
         }
-        if (p.isKeysDown(p.key.left)) {
+        if (p.isKeysDown(p.Key.left)) {
             stick.x = -1;
         }
         return stick;
