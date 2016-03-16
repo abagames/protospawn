@@ -83,11 +83,14 @@ module Mech {
         }
 
         export class KeyPressed extends Mech {
-            key = p.Key.button;
+            key: number[];
             do: (a: Actor) => void;
             isPressed = false;
 
             update(a: Actor) {
+                if (this.key == null) {
+                    this.key = p.Key.button;
+                }
                 if (p.isKeysDown(this.key)) {
                     if (!this.isPressed) {
                         this.isPressed = true;
@@ -147,11 +150,17 @@ module Mech {
     }
 
     export module Event {
-        export class EveryFrame extends Mech {
+        export class Frame extends Mech {
+            interval = 1;
             do: (a: Actor) => void;
+            ticks = 0;
 
             update(a: Actor) {
-                this.do(a);
+                this.ticks--;
+                if (this.ticks <= 0) {
+                    this.do(a);
+                    this.ticks = this.interval;
+                }
             }
         }
 

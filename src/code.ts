@@ -9,16 +9,26 @@ function setPsCode() {
         ps.enm();
     }
     ps.ply = function*(x = 50) {
-        this.set({pos: {x, y: 90}, size: 7, mechs: [
-            new m.AvatarMove.Direction().set({speed: 2, isVertical: false}),
+        this.set({pos: {x, y: 90}, baseSpeed: 2, size: 7, mechs: [
+            new m.AvatarMove.Direction().set({isVertical: false}),
             new m.EndOfScreen.Clamp(),
             new m.Collision.Test().set({name: ['bulletEnm', 'explosion'], do: (s, o) => {
-                s.remove();
-                ps.delaySpawn(30, ps.ply, [this.pos.x]);
+                if (s.remove()) {
+                    ps.delaySpawn(30, ps.ply, [this.pos.x]);
+                }
             }}),
-            new m.AvatarInput.KeyPressed().set({do: () => {
+            new m.AvatarInput.KeyDown().set({key: p.Key.button2, interval: 5, do: () => {
                 ps.bullet({pos: this.pos, angle: -p.HALF_PI, name: 'bulletPly'});
+            }}),
+            new m.AvatarInput.KeyPressed().set({key: p.Key.button3, do: () => {
                 ps.exploder({pos: this.pos, vel: {y: -5}, name: 'exploderPly'});
+            }}),
+            new m.Event.Frame().set({do: () => {
+                if (p.isKeysDown(p.Key.button1)) {
+                    this.mechs[0].speed = this.baseSpeed * 0.5;
+                } else {
+                    this.mechs[0].speed = this.baseSpeed;
+                }
             }})
         ]});
     }
@@ -31,8 +41,9 @@ function setPsCode() {
             new m.Event.Random().set({probability: 0.02, do: (a) => a.vel.x *= -1 }),
             new m.EndOfScreen.Bounce(),
             new m.Collision.Test().set({name: ['bulletPly', 'explosion'], do: (s, o) => {
-                s.remove();
-                ps.delaySpawn(30, ps.enm)
+                if (s.remove()) {
+                    ps.delaySpawn(30, ps.enm)
+                }
             }}),
             new m.Event.Random().set({probability: 0.05, do: (a) => {
                 ps.bullet({pos: this.pos, angle: p.HALF_PI, name: 'bulletEnm'});

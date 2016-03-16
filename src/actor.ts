@@ -32,7 +32,11 @@ class Actor {
     group: Actor.Group;
 
     remove() {
-        this.isAlive = false;
+        if (this.isAlive) {
+            this.isAlive = false;
+            return true;
+        }
+        return false;
     }
 
     set(json: any) {
