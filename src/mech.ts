@@ -83,14 +83,11 @@ module Mech {
         }
 
         export class KeyPressed extends Mech {
-            key: number[];
+            key: number[] = p.Key.button;
             do: (a: Actor) => void;
             isPressed = false;
 
             update(a: Actor) {
-                if (this.key == null) {
-                    this.key = p.Key.button;
-                }
                 if (p.isKeysDown(this.key)) {
                     if (!this.isPressed) {
                         this.isPressed = true;
@@ -184,7 +181,7 @@ module Mech {
             update(a: Actor) {
                 let others = Actor.get(this.name);
                 _.forEach(others, (other: Actor) => {
-                    if (a.testCollision(other)) {
+                    if (a != other && a.isVisible && other.isVisible && a.testCollision(other)) {
                         this.do(a, other);
                     }
                 });

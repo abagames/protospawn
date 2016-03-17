@@ -54,8 +54,8 @@ const functionToActorHook = {
         const targetObj = target[name];
         if (typeof targetObj === 'function') {
             return function(...args) {
-                if (args.length > 0 && args[0].name != null) {
-                    name = args[0].name;
+                if (args.length > 0 && args[0].rename != null) {
+                    name = args[0].rename;
                 }
                 const actor = new Actor(name);
                 actor.generator = targetObj.apply(actor, args);

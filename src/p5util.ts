@@ -77,7 +77,8 @@ function p5Util(p5, p: p5) {
     }
     p5.prototype.setFromJsonToObj = function(obj: any, json: any, deepCount = 0) {
         for (let prop in json) {
-            if (typeof json[prop] === 'object' && obj[prop] != null && deepCount < 5) {
+            if (typeof json[prop] === 'object' && !_.isArray(json[prop]) &&
+                obj[prop] != null && deepCount < 5) {
                 p.setFromJsonToObj(obj[prop], json[prop], deepCount + 1);
             } else {
                 obj[prop] = json[prop];
