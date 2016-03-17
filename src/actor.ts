@@ -13,10 +13,14 @@ class Actor {
     width = 5;
     height = 5;
     mechs: any[] = [];
-    testCollision = (other: Actor) =>
-        p.collideRectRect
+    testCollision = (other: Actor) => {
+        if (!this.isVisible || !other.isVisible) {
+            return false;
+        }
+        return p.collideRectRect
             (this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height,
             other.pos.x - other.width / 2, other.pos.y - other.height / 2, other.width, other.height);
+    }
     stroke = 'black';
     fill = 'white';
     draw = () => {
@@ -28,6 +32,7 @@ class Actor {
     generator: any;
     waitingTicks = 0;
     isAlive = true;
+    isVisible = true;
     removeIfOut = new Mech.EndOfScreen.Remove().set({ padding: 100 });
     group: Actor.Group;
 
@@ -64,9 +69,6 @@ class Actor {
             this.prevSize = this.size;
         }
         this.removeIfOut.update(this);
-        if (this.draw != null) {
-            this.draw();
-        }
         _.forEach(this.mechs, (m) => {
             if (typeof m === 'function') {
                 m();
@@ -75,6 +77,9 @@ class Actor {
             }
         });
         this.pos.add(this.vel).add(p.vectorFromAngle(this.angle).mult(this.speed));
+        if (this.draw != null && this.isVisible) {
+            this.draw();
+        }
         this.ticks++;
     }
 }
