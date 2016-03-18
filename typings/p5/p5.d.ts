@@ -58,7 +58,7 @@ declare class p5 {
         button1: number[], button2: number[], button3: number[], button4: number[],
         button: number[] };
     getStick(): p5.Vector;
-    isKeysDown(keyCodes: number[]): boolean;
+    isKeyDown(key: number[]): boolean;
     setFromJsonToObj(obj: any, json: any, deepCount?: number);
 }
 

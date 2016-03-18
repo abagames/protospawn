@@ -55,7 +55,7 @@ module Mech {
             ticks = 0;
 
             update(a: Actor) {
-                if (p.isKeysDown(this.key)) {
+                if (p.isKeyDown(this.key)) {
                     this.ticks--;
                     if (this.ticks <= 0) {
                         this.do(a);
@@ -72,7 +72,7 @@ module Mech {
             ticks = 0;
 
             update(a: Actor) {
-                if (!p.isKeysDown(this.key)) {
+                if (!p.isKeyDown(this.key)) {
                     this.ticks--;
                     if (this.ticks <= 0) {
                         this.do(a);
@@ -88,7 +88,7 @@ module Mech {
             isPressed = false;
 
             update(a: Actor) {
-                if (p.isKeysDown(this.key)) {
+                if (p.isKeyDown(this.key)) {
                     if (!this.isPressed) {
                         this.isPressed = true;
                         this.do(a);
@@ -105,7 +105,7 @@ module Mech {
             isPressed = false;
 
             update(a: Actor) {
-                if (p.isKeysDown(this.key)) {
+                if (p.isKeyDown(this.key)) {
                     this.isPressed = true;
                 } else {
                     if (this.isPressed) {

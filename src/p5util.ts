@@ -58,22 +58,22 @@ function p5Util(p5, p: p5) {
     };
     p5.prototype.getStick = function(): p5.Vector {
         let stick = new p5.Vector();
-        if (p.isKeysDown(p.Key.up)) {
+        if (p.isKeyDown(p.Key.up)) {
             stick.y = -1;
         }
-        if (p.isKeysDown(p.Key.right)) {
+        if (p.isKeyDown(p.Key.right)) {
             stick.x = 1;
         }
-        if (p.isKeysDown(p.Key.down)) {
+        if (p.isKeyDown(p.Key.down)) {
             stick.y = 1;
         }
-        if (p.isKeysDown(p.Key.left)) {
+        if (p.isKeyDown(p.Key.left)) {
             stick.x = -1;
         }
         return stick;
     }
-    p5.prototype.isKeysDown = function(keyCodes: number[]): boolean {
-        return _.some(keyCodes, (kc: number) => p.keyIsDown(kc));
+    p5.prototype.isKeyDown = function(key: number[]): boolean {
+        return _.some(key, (kc: number) => p.keyIsDown(kc));
     }
     p5.prototype.setFromJsonToObj = function(obj: any, json: any, deepCount = 0) {
         for (let prop in json) {
