@@ -72,10 +72,22 @@
 	        this.width = 5;
 	        this.height = 5;
 	        this.mechs = [];
-	        this.testCollision = (other) => protospawn_1.p5js.collideRectRect(this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height, other.pos.x - other.width / 2, other.pos.y - other.height / 2, other.width, other.height);
-	        this.draw = () => protospawn_1.p5js.rect(this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height);
+	        this.testCollision = (other) => {
+	            if (!this.isVisible || !other.isVisible) {
+	                return false;
+	            }
+	            return protospawn_1.p5js.collideRectRect(this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height, other.pos.x - other.width / 2, other.pos.y - other.height / 2, other.width, other.height);
+	        };
+	        this.stroke = 'black';
+	        this.fill = 'white';
+	        this.draw = () => {
+	            protospawn_1.p5js.stroke(this.stroke);
+	            protospawn_1.p5js.fill(this.fill);
+	            protospawn_1.p5js.rect(this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height);
+	        };
 	        this.waitingTicks = 0;
 	        this.isAlive = true;
+	        this.isVisible = true;
 	        this.removeIfOut = new mech_1.default.EndOfScreen.Remove().set({ padding: 100 });
 	        _.forEach(Actor.groups, (group) => {
 	            if (group.name === name) {
@@ -90,7 +102,11 @@
 	        this.group.actors.push(this);
 	    }
 	    remove() {
-	        this.isAlive = false;
+	        if (this.isAlive) {
+	            this.isAlive = false;
+	            return true;
+	        }
+	        return false;
 	    }
 	    set(json) {
 	        protospawn_1.p5js.setFromJsonToObj(this, json);
@@ -102,9 +118,6 @@
 	            this.prevSize = this.size;
 	        }
 	        this.removeIfOut.update(this);
-	        if (this.draw != null) {
-	            this.draw();
-	        }
 	        _.forEach(this.mechs, (m) => {
 	            if (typeof m === 'function') {
 	                m();
@@ -114,6 +127,9 @@
 	            }
 	        });
 	        this.pos.add(this.vel).add(protospawn_1.p5js.vectorFromAngle(this.angle).mult(this.speed));
+	        if (this.draw != null && this.isVisible) {
+	            this.draw();
+	        }
 	        this.ticks++;
 	    }
 	}
@@ -15329,8 +15345,8 @@
 	        const targetObj = target[name];
 	        if (typeof targetObj === 'function') {
 	            return function (...args) {
-	                if (args.length > 0 && args[0].name != null) {
-	                    name = args[0].name;
+	                if (args.length > 0 && args[0].rename != null) {
+	                    name = args[0].rename;
 	                }
 	                const actor = new actor_1.default(name);
 	                actor.generator = targetObj.apply(actor, args);
@@ -45564,13 +45580,50 @@
 	    })(AvatarMove = Mech.AvatarMove || (Mech.AvatarMove = {}));
 	    var AvatarInput;
 	    (function (AvatarInput) {
-	        class ButtonPressed extends Mech {
+	        class KeyDown extends Mech {
 	            constructor(...args) {
 	                super(...args);
+	                this.key = protospawn_1.p5js.Key.button;
+	                this.interval = 1;
+	                this.ticks = 0;
+	            }
+	            update(a) {
+	                if (protospawn_1.p5js.isKeyDown(this.key)) {
+	                    this.ticks--;
+	                    if (this.ticks <= 0) {
+	                        this.do(a);
+	                        this.ticks = this.interval;
+	                    }
+	                }
+	            }
+	        }
+	        AvatarInput.KeyDown = KeyDown;
+	        class KeyUp extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.key = protospawn_1.p5js.Key.button;
+	                this.interval = 1;
+	                this.ticks = 0;
+	            }
+	            update(a) {
+	                if (!protospawn_1.p5js.isKeyDown(this.key)) {
+	                    this.ticks--;
+	                    if (this.ticks <= 0) {
+	                        this.do(a);
+	                        this.ticks = this.interval;
+	                    }
+	                }
+	            }
+	        }
+	        AvatarInput.KeyUp = KeyUp;
+	        class KeyPressed extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.key = protospawn_1.p5js.Key.button;
 	                this.isPressed = false;
 	            }
 	            update(a) {
-	                if (protospawn_1.p5js.isKeysDown(protospawn_1.p5js.keyCodes.button)) {
+	                if (protospawn_1.p5js.isKeyDown(this.key)) {
 	                    if (!this.isPressed) {
 	                        this.isPressed = true;
 	                        this.do(a);
@@ -45581,7 +45634,26 @@
 	                }
 	            }
 	        }
-	        AvatarInput.ButtonPressed = ButtonPressed;
+	        AvatarInput.KeyPressed = KeyPressed;
+	        class KeyReleased extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.key = protospawn_1.p5js.Key.button;
+	                this.isPressed = false;
+	            }
+	            update(a) {
+	                if (protospawn_1.p5js.isKeyDown(this.key)) {
+	                    this.isPressed = true;
+	                }
+	                else {
+	                    if (this.isPressed) {
+	                        this.isPressed = false;
+	                        this.do(a);
+	                    }
+	                }
+	            }
+	        }
+	        AvatarInput.KeyReleased = KeyReleased;
 	    })(AvatarInput = Mech.AvatarInput || (Mech.AvatarInput = {}));
 	    var EndOfScreen;
 	    (function (EndOfScreen) {
@@ -45617,6 +45689,21 @@
 	    })(EndOfScreen = Mech.EndOfScreen || (Mech.EndOfScreen = {}));
 	    var Event;
 	    (function (Event) {
+	        class Frame extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.interval = 1;
+	                this.ticks = 0;
+	            }
+	            update(a) {
+	                this.ticks--;
+	                if (this.ticks <= 0) {
+	                    this.do(a);
+	                    this.ticks = this.interval;
+	                }
+	            }
+	        }
+	        Event.Frame = Frame;
 	        class Random extends Mech {
 	            constructor(...args) {
 	                super(...args);
@@ -45636,7 +45723,7 @@
 	            update(a) {
 	                let others = actor_1.default.get(this.name);
 	                _.forEach(others, (other) => {
-	                    if (a.testCollision(other)) {
+	                    if (a != other && a.isVisible && other.isVisible && a.testCollision(other)) {
 	                        this.do(a, other);
 	                    }
 	                });
@@ -45739,7 +45826,7 @@
 	    const button4KeyCodes = [86, 77];
 	    const buttonKeyCodes = button1KeyCodes.
 	        concat(button2KeyCodes).concat(button3KeyCodes).concat(button4KeyCodes);
-	    p5.prototype.keyCodes = {
+	    p5.prototype.Key = {
 	        up: [38, 87, 73, 104],
 	        right: [39, 68, 76, 102],
 	        down: [40, 83, 75, 101, 98],
@@ -45753,26 +45840,27 @@
 	    };
 	    p5.prototype.getStick = function () {
 	        let stick = new p5.Vector();
-	        if (p.isKeysDown(p.keyCodes.up)) {
+	        if (p.isKeyDown(p.Key.up)) {
 	            stick.y = -1;
 	        }
-	        if (p.isKeysDown(p.keyCodes.right)) {
+	        if (p.isKeyDown(p.Key.right)) {
 	            stick.x = 1;
 	        }
-	        if (p.isKeysDown(p.keyCodes.down)) {
+	        if (p.isKeyDown(p.Key.down)) {
 	            stick.y = 1;
 	        }
-	        if (p.isKeysDown(p.keyCodes.left)) {
+	        if (p.isKeyDown(p.Key.left)) {
 	            stick.x = -1;
 	        }
 	        return stick;
 	    };
-	    p5.prototype.isKeysDown = function (keyCodes) {
-	        return _.some(keyCodes, (kc) => p.keyIsDown(kc));
+	    p5.prototype.isKeyDown = function (key) {
+	        return _.some(key, (kc) => p.keyIsDown(kc));
 	    };
 	    p5.prototype.setFromJsonToObj = function (obj, json, deepCount = 0) {
 	        for (let prop in json) {
-	            if (typeof json[prop] === 'object' && obj[prop] != null && deepCount < 5) {
+	            if (typeof json[prop] === 'object' && !_.isArray(json[prop]) &&
+	                obj[prop] != null && deepCount < 5) {
 	                p.setFromJsonToObj(obj[prop], json[prop], deepCount + 1);
 	            }
 	            else {
@@ -45828,18 +45916,42 @@
 	        protospawn_1.protoSpawn.enm();
 	    };
 	    protospawn_1.protoSpawn.ply = function* (x = 50) {
-	        this.set({ pos: { x: x, y: 90 }, size: 7, mechs: [
-	                new protospawn_1.mech.AvatarMove.Direction().set({ speed: 2, isVertical: false }),
+	        let barrier = protospawn_1.protoSpawn.barrier(this.pos);
+	        this.set({ pos: { x: x, y: 90 }, baseSpeed: 2, size: 7, mechs: [
+	                new protospawn_1.mech.AvatarMove.Direction().set({ isVertical: false }),
 	                new protospawn_1.mech.EndOfScreen.Clamp(),
 	                new protospawn_1.mech.Collision.Test().set({ name: ['bulletEnm', 'explosion'], do: (s, o) => {
-	                        s.remove();
-	                        protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ply, [this.pos.x]);
+	                        if (s.remove()) {
+	                            barrier.remove();
+	                            protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ply, [this.pos.x]);
+	                        }
 	                    } }),
-	                new protospawn_1.mech.AvatarInput.ButtonPressed().set({ do: () => {
-	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: -protospawn_1.p5js.HALF_PI, name: 'bulletPly' });
-	                        protospawn_1.protoSpawn.exploder({ pos: this.pos, vel: { y: -5 }, name: 'exploderPly' });
+	                new protospawn_1.mech.AvatarInput.KeyDown().set({ key: protospawn_1.p5js.Key.button2, interval: 5, do: () => {
+	                        if (!protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button1)) {
+	                            protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: -protospawn_1.p5js.HALF_PI, rename: 'bulletPly' });
+	                        }
+	                    } }),
+	                new protospawn_1.mech.AvatarInput.KeyPressed().set({ key: protospawn_1.p5js.Key.button3, do: () => {
+	                        if (!protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button1)) {
+	                            protospawn_1.protoSpawn.exploder({ pos: this.pos, vel: { y: -5 }, rename: 'exploderPly' });
+	                        }
+	                    } }),
+	                new protospawn_1.mech.Event.Frame().set({ do: () => {
+	                        if (protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button1)) {
+	                            this.mechs[0].speed = this.baseSpeed * 0.5;
+	                        }
+	                        else {
+	                            this.mechs[0].speed = this.baseSpeed;
+	                        }
+	                        barrier.isVisible = protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button1) ||
+	                            (this.vel.x === 0 && !protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button2) && !protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button3));
 	                    } })
 	            ] });
+	    };
+	    protospawn_1.protoSpawn.barrier = function* (pos) {
+	        this.size = 18;
+	        this.fill = 'rgba(0, 0, 0, 0)';
+	        this.pos = pos;
 	    };
 	    protospawn_1.protoSpawn.enm = function* () {
 	        this.set({
@@ -45850,12 +45962,13 @@
 	                new protospawn_1.mech.Event.Random().set({ probability: 0.02, do: (a) => a.vel.x *= -1 }),
 	                new protospawn_1.mech.EndOfScreen.Bounce(),
 	                new protospawn_1.mech.Collision.Test().set({ name: ['bulletPly', 'explosion'], do: (s, o) => {
-	                        s.remove();
-	                        protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.enm);
+	                        if (s.remove()) {
+	                            protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.enm);
+	                        }
 	                    } }),
 	                new protospawn_1.mech.Event.Random().set({ probability: 0.05, do: (a) => {
-	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: protospawn_1.p5js.HALF_PI, name: 'bulletEnm' });
-	                        protospawn_1.protoSpawn.exploder({ pos: this.pos, vel: { y: 5 }, name: 'exploderEnm' });
+	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: protospawn_1.p5js.HALF_PI, rename: 'bulletEnm' });
+	                        protospawn_1.protoSpawn.exploder({ pos: this.pos, vel: { y: 5 }, rename: 'exploderEnm' });
 	                    } }),
 	            ] });
 	    };
@@ -45863,7 +45976,7 @@
 	        this.set(prop);
 	        this.speed = this.size = 3;
 	        this.mechs = [
-	            new protospawn_1.mech.Collision.TestAndRemove().set({ name: 'explosion' })
+	            new protospawn_1.mech.Collision.TestAndRemove().set({ name: ['explosion', 'barrier'] })
 	        ];
 	    };
 	    protospawn_1.protoSpawn.exploder = function* (prop) {
@@ -45877,6 +45990,7 @@
 	    };
 	    protospawn_1.protoSpawn.explosion = function* (prop) {
 	        this.set(prop);
+	        this.stroke = 'red';
 	        for (let i = 0; i < 15; i++) {
 	            this.size += 2;
 	            yield;
