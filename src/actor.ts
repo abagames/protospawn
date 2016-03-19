@@ -12,14 +12,19 @@ class Actor {
     prevSize: number = this.size;
     width = 5;
     height = 5;
+    collisionSizeRatio: number = 1.0;
     mechs: any[] = [];
     testCollision = (other: Actor) => {
         if (!this.isVisible || !other.isVisible) {
             return false;
         }
         return p.collideRectRect
-            (this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height,
-            other.pos.x - other.width / 2, other.pos.y - other.height / 2, other.width, other.height);
+            (this.pos.x - this.width * this.collisionSizeRatio/ 2,
+            this.pos.y - this.height * this.collisionSizeRatio / 2,
+            this.width * this.collisionSizeRatio, this.height * this.collisionSizeRatio,
+            other.pos.x - other.width * other.collisionSizeRatio / 2,
+            other.pos.y - other.height * other.collisionSizeRatio / 2,
+            other.width * other.collisionSizeRatio, other.height * other.collisionSizeRatio);
     }
     stroke = 'black';
     fill = 'white';
