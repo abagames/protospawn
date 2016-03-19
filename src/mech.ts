@@ -134,7 +134,7 @@ module Mech {
             }
         }
 
-        export class Bounce extends Mech {
+        export class BounceVel extends Mech {
             update(a: Actor) {
                 if ((a.pos.x < 0 && a.vel.x < 0) || (a.pos.x > p.width && a.vel.x > 0)) {
                     a.vel.x *= -1;
@@ -142,6 +142,37 @@ module Mech {
                 if ((a.pos.y < 0 && a.vel.y < 0) || (a.pos.y > p.height && a.vel.y > 0)) {
                     a.vel.y *= -1;
                 }
+            }
+        }
+
+        export class ReflectAngle extends Mech {
+            update(a: Actor) {
+                let normAngle: number = null;
+                if (a.pos.x < 0) {
+                    normAngle = 0;
+                }
+                if (a.pos.x > p.width) {
+                    normAngle = p.PI;
+                }
+                if (a.pos.y < 0) {
+                    normAngle = p.HALF_PI;
+                }
+                if (a.pos.y > p.height) {
+                    normAngle = -p.HALF_PI;
+                }
+                if (normAngle == null) {
+                    return;
+                }
+                let oa = p.normalizeAngle(a.angle - normAngle);
+                if (Math.abs(oa) <= p.HALF_PI) {
+                    return;
+                }
+                a.angle += oa;
+                /*if (oa > 0) {
+                    a.angle += p.PI - oa;
+                } else {
+                    a.angle += -p.PI - oa;
+                }*/
             }
         }
     }
@@ -168,6 +199,51 @@ module Mech {
             update(a: Actor) {
                 if (p.random() <= this.probability) {
                     this.do(a);
+                }
+            }
+        }
+
+        export class Resource extends Mech {
+            count = 1;
+            do: (a: Actor) => void;
+            cond = () => true;
+            current = 0;
+
+            update(a: Actor) {
+                this.current--;
+                if (this.current <= 0 && this.cond()) {
+                    this.do(a);
+                    this.current = this.count;
+                }
+            }
+        }
+    }
+
+    export module Random {
+        export class Flip extends Mech {
+            value = false;
+            probability = 0.1;
+            toTrueProbability: number = null;
+            toFalseProbability: number = null;
+
+            update(a: Actor) {
+                let r = p.random();
+                if (this.value) {
+                    if (this.toFalseProbability != null) {
+                        if (r < this.toFalseProbability) {
+                            this.value = false;
+                        }
+                    } else if (p.random() <= this.probability) {
+                        this.value = false;
+                    }
+                } else {
+                    if (this.toTrueProbability != null) {
+                        if (r < this.toTrueProbability) {
+                            this.value = true;
+                        }
+                    } else if (p.random() <= this.probability) {
+                        this.value = true;
+                    }
                 }
             }
         }
