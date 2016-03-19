@@ -71,12 +71,13 @@
 	        this.prevSize = this.size;
 	        this.width = 5;
 	        this.height = 5;
+	        this.collisionSizeRatio = 1.0;
 	        this.mechs = [];
 	        this.testCollision = (other) => {
 	            if (!this.isVisible || !other.isVisible) {
 	                return false;
 	            }
-	            return protospawn_1.p5js.collideRectRect(this.pos.x - this.width / 2, this.pos.y - this.height / 2, this.width, this.height, other.pos.x - other.width / 2, other.pos.y - other.height / 2, other.width, other.height);
+	            return protospawn_1.p5js.collideRectRect(this.pos.x - this.width * this.collisionSizeRatio / 2, this.pos.y - this.height * this.collisionSizeRatio / 2, this.width * this.collisionSizeRatio, this.height * this.collisionSizeRatio, other.pos.x - other.width * other.collisionSizeRatio / 2, other.pos.y - other.height * other.collisionSizeRatio / 2, other.width * other.collisionSizeRatio, other.height * other.collisionSizeRatio);
 	        };
 	        this.stroke = 'black';
 	        this.fill = 'white';
@@ -15299,6 +15300,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+	const _ = __webpack_require__(2);
 	const p5 = __webpack_require__(5);
 	const p5Collide = __webpack_require__(6);
 	const actor_1 = __webpack_require__(1);
@@ -15334,9 +15336,10 @@
 	    exports.protoSpawn.simple = function* (json) {
 	        this.set(json);
 	    };
-	    exports.protoSpawn.delaySpawn = function* (wait, spawnFunc, args = null) {
+	    exports.protoSpawn.delaySpawn = function* (wait, spawnFunc, arg = null) {
 	        yield wait;
-	        spawnFunc.apply(this, args);
+	        let a = _.isArray(arg) ? arg : [arg];
+	        spawnFunc.apply(this, a);
 	        this.remove();
 	    };
 	}
@@ -15347,6 +15350,7 @@
 	            return function (...args) {
 	                if (args.length > 0 && args[0].rename != null) {
 	                    name = args[0].rename;
+	                    args[0].rename = null;
 	                }
 	                const actor = new actor_1.default(name);
 	                actor.generator = targetObj.apply(actor, args);
@@ -45675,7 +45679,7 @@
 	            }
 	        }
 	        EndOfScreen.Remove = Remove;
-	        class Bounce extends Mech {
+	        class BounceVel extends Mech {
 	            update(a) {
 	                if ((a.pos.x < 0 && a.vel.x < 0) || (a.pos.x > protospawn_1.p5js.width && a.vel.x > 0)) {
 	                    a.vel.x *= -1;
@@ -45685,7 +45689,38 @@
 	                }
 	            }
 	        }
-	        EndOfScreen.Bounce = Bounce;
+	        EndOfScreen.BounceVel = BounceVel;
+	        class ReflectAngle extends Mech {
+	            update(a) {
+	                let normAngle = null;
+	                if (a.pos.x < 0) {
+	                    normAngle = 0;
+	                }
+	                if (a.pos.x > protospawn_1.p5js.width) {
+	                    normAngle = protospawn_1.p5js.PI;
+	                }
+	                if (a.pos.y < 0) {
+	                    normAngle = protospawn_1.p5js.HALF_PI;
+	                }
+	                if (a.pos.y > protospawn_1.p5js.height) {
+	                    normAngle = -protospawn_1.p5js.HALF_PI;
+	                }
+	                if (normAngle == null) {
+	                    return;
+	                }
+	                let oa = protospawn_1.p5js.normalizeAngle(a.angle - normAngle);
+	                if (Math.abs(oa) <= protospawn_1.p5js.HALF_PI) {
+	                    return;
+	                }
+	                a.angle += oa;
+	                /*if (oa > 0) {
+	                    a.angle += p.PI - oa;
+	                } else {
+	                    a.angle += -p.PI - oa;
+	                }*/
+	            }
+	        }
+	        EndOfScreen.ReflectAngle = ReflectAngle;
 	    })(EndOfScreen = Mech.EndOfScreen || (Mech.EndOfScreen = {}));
 	    var Event;
 	    (function (Event) {
@@ -45716,7 +45751,59 @@
 	            }
 	        }
 	        Event.Random = Random;
+	        class Resource extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.count = 1;
+	                this.cond = () => true;
+	                this.current = 0;
+	            }
+	            update(a) {
+	                this.current--;
+	                if (this.current <= 0 && this.cond()) {
+	                    this.do(a);
+	                    this.current = this.count;
+	                }
+	            }
+	        }
+	        Event.Resource = Resource;
 	    })(Event = Mech.Event || (Mech.Event = {}));
+	    var Random;
+	    (function (Random) {
+	        class Flip extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.value = false;
+	                this.probability = 0.1;
+	                this.toTrueProbability = null;
+	                this.toFalseProbability = null;
+	            }
+	            update(a) {
+	                let r = protospawn_1.p5js.random();
+	                if (this.value) {
+	                    if (this.toFalseProbability != null) {
+	                        if (r < this.toFalseProbability) {
+	                            this.value = false;
+	                        }
+	                    }
+	                    else if (protospawn_1.p5js.random() <= this.probability) {
+	                        this.value = false;
+	                    }
+	                }
+	                else {
+	                    if (this.toTrueProbability != null) {
+	                        if (r < this.toTrueProbability) {
+	                            this.value = true;
+	                        }
+	                    }
+	                    else if (protospawn_1.p5js.random() <= this.probability) {
+	                        this.value = true;
+	                    }
+	                }
+	            }
+	        }
+	        Random.Flip = Flip;
+	    })(Random = Mech.Random || (Mech.Random = {}));
 	    var Collision;
 	    (function (Collision) {
 	        class Test extends Mech {
@@ -45912,65 +45999,104 @@
 	        this.set({ mechs: [
 	                new protospawn_1.mech.Condition.LimitActorCount().set({ name: ['exploderPly', 'exploderEnm'] })
 	            ] });
-	        protospawn_1.protoSpawn.ply();
-	        protospawn_1.protoSpawn.enm();
+	        protospawn_1.protoSpawn.ship({ rename: 'shipPly', pos: { x: 50 } });
+	        protospawn_1.protoSpawn.ship({ raname: 'shipEnm' });
 	    };
-	    protospawn_1.protoSpawn.ply = function* (x = 50) {
-	        let barrier = protospawn_1.protoSpawn.barrier(this.pos);
-	        this.set({ pos: { x: x, y: 90 }, baseSpeed: 2, size: 7, mechs: [
-	                new protospawn_1.mech.AvatarMove.Direction().set({ isVertical: false }),
-	                new protospawn_1.mech.EndOfScreen.Clamp(),
-	                new protospawn_1.mech.Collision.Test().set({ name: ['bulletEnm', 'explosion'], do: (s, o) => {
+	    protospawn_1.protoSpawn.ship = function* (prop) {
+	        let isPlayer = this.name === 'shipPly';
+	        this.set(prop);
+	        let bulletName = isPlayer ? 'bulletPly' : 'bulletEnm';
+	        let fireAngle = isPlayer ? -protospawn_1.p5js.HALF_PI : protospawn_1.p5js.HALF_PI;
+	        let exploderName = isPlayer ? 'exploderPly' : 'exploderEnm';
+	        let colBulletName = isPlayer ? 'bulletEnm' : 'bulletPly';
+	        let barrier = protospawn_1.protoSpawn.barrier(this);
+	        let barrierSensor = protospawn_1.protoSpawn.barrierSensor(this, colBulletName);
+	        this.isNearBullet = false;
+	        let avatarMoveDirection = new protospawn_1.mech.AvatarMove.Direction().set({ isVertical: false });
+	        let button1Flip = new protospawn_1.mech.Random.Flip().set({ probability: 0.1 });
+	        let button2Flip = new protospawn_1.mech.Random.Flip().set({ toTrueProbability: 0.02, toFalseProbability: 0.1 });
+	        this.set({ baseSpeed: 2, size: 7, collisionSizeRatio: 0.7, mechs: [
+	                new protospawn_1.mech.Collision.Test().set({ name: [colBulletName, 'explosion'], do: (s, o) => {
 	                        if (s.remove()) {
 	                            barrier.remove();
-	                            protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ply, [this.pos.x]);
-	                        }
-	                    } }),
-	                new protospawn_1.mech.AvatarInput.KeyDown().set({ key: protospawn_1.p5js.Key.button2, interval: 5, do: () => {
-	                        if (!protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button1)) {
-	                            protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: -protospawn_1.p5js.HALF_PI, rename: 'bulletPly' });
-	                        }
-	                    } }),
-	                new protospawn_1.mech.AvatarInput.KeyPressed().set({ key: protospawn_1.p5js.Key.button3, do: () => {
-	                        if (!protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button1)) {
-	                            protospawn_1.protoSpawn.exploder({ pos: this.pos, vel: { y: -5 }, rename: 'exploderPly' });
+	                            barrierSensor.remove();
+	                            if (isPlayer) {
+	                                protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ship, { rename: 'shipPly', pos: { x: this.pos.x } });
+	                            }
+	                            else {
+	                                protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ship, { raname: 'shipEnm' });
+	                            }
 	                        }
 	                    } }),
 	                new protospawn_1.mech.Event.Frame().set({ do: () => {
-	                        if (protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button1)) {
-	                            this.mechs[0].speed = this.baseSpeed * 0.5;
+	                        if (isPlayer) {
+	                            this.isButton1Down = protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button1);
+	                            this.isButton2Down = protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button2);
 	                        }
 	                        else {
-	                            this.mechs[0].speed = this.baseSpeed;
+	                            this.isButton1Down = button1Flip.value;
+	                            this.isButton2Down = button2Flip.value;
 	                        }
-	                        barrier.isVisible = protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button1) ||
-	                            (this.vel.x === 0 && !protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button2) && !protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button3));
+	                        if (!this.isButton1Down && !this.isButton2Down && this.isNearBullet) {
+	                            if (isPlayer) {
+	                                avatarMoveDirection.speed = this.baseSpeed * 0.5;
+	                            }
+	                            else {
+	                                this.speed = this.baseSpeed * 0.5;
+	                            }
+	                            barrier.isVisible = true;
+	                        }
+	                        else {
+	                            if (isPlayer) {
+	                                avatarMoveDirection.speed = this.baseSpeed;
+	                            }
+	                            else {
+	                                this.speed = this.baseSpeed;
+	                            }
+	                            barrier.isVisible = false;
+	                        }
+	                        this.isNearBullet = false;
+	                    } }),
+	                new protospawn_1.mech.Event.Resource().set({ count: 5, cond: () => this.isButton1Down, do: () => {
+	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: fireAngle, rename: bulletName });
+	                    } }),
+	                new protospawn_1.mech.Event.Resource().set({ cond: () => this.isButton2Down, do: () => {
+	                        protospawn_1.protoSpawn.exploder({ pos: this.pos, angle: fireAngle, rename: exploderName });
 	                    } })
 	            ] });
+	        if (isPlayer) {
+	            this.pos.y = 90;
+	            this.mechs = this.mechs.concat([
+	                avatarMoveDirection,
+	                new protospawn_1.mech.EndOfScreen.Clamp(),
+	            ]);
+	        }
+	        else {
+	            this.pos.x = protospawn_1.p5js.random(10, 90);
+	            this.pos.y = 10;
+	            this.angle = protospawn_1.p5js.randomInt() * protospawn_1.p5js.PI;
+	            this.mechs = this.mechs.concat([
+	                button1Flip, button2Flip,
+	                new protospawn_1.mech.Event.Random().set({ probability: 0.02, do: () => this.angle += protospawn_1.p5js.PI }),
+	                new protospawn_1.mech.EndOfScreen.ReflectAngle()
+	            ]);
+	        }
 	    };
-	    protospawn_1.protoSpawn.barrier = function* (pos) {
-	        this.size = 18;
+	    protospawn_1.protoSpawn.barrier = function* (parent) {
+	        this.size = 15;
+	        this.collisionSizeRatio = 1.5;
 	        this.fill = 'rgba(0, 0, 0, 0)';
-	        this.pos = pos;
+	        this.pos = parent.pos;
 	    };
-	    protospawn_1.protoSpawn.enm = function* () {
-	        this.set({
-	            pos: { x: protospawn_1.p5js.random(0, 100), y: 10 },
-	            vel: { x: protospawn_1.p5js.randomPlusMinus() * 2, y: 0 },
-	            size: 7,
-	            mechs: [
-	                new protospawn_1.mech.Event.Random().set({ probability: 0.02, do: (a) => a.vel.x *= -1 }),
-	                new protospawn_1.mech.EndOfScreen.Bounce(),
-	                new protospawn_1.mech.Collision.Test().set({ name: ['bulletPly', 'explosion'], do: (s, o) => {
-	                        if (s.remove()) {
-	                            protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.enm);
-	                        }
-	                    } }),
-	                new protospawn_1.mech.Event.Random().set({ probability: 0.05, do: (a) => {
-	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: protospawn_1.p5js.HALF_PI, rename: 'bulletEnm' });
-	                        protospawn_1.protoSpawn.exploder({ pos: this.pos, vel: { y: 5 }, rename: 'exploderEnm' });
-	                    } }),
-	            ] });
+	    protospawn_1.protoSpawn.barrierSensor = function* (parent, bulletName) {
+	        this.size = 50;
+	        this.draw = () => { };
+	        this.pos = parent.pos;
+	        this.mechs = [
+	            new protospawn_1.mech.Collision.Test().set({ name: bulletName, do: (s, o) => {
+	                    parent.isNearBullet = true;
+	                } })
+	        ];
 	    };
 	    protospawn_1.protoSpawn.bullet = function* (prop) {
 	        this.set(prop);
@@ -45981,8 +46107,10 @@
 	    };
 	    protospawn_1.protoSpawn.exploder = function* (prop) {
 	        this.set(prop);
+	        this.stroke = 'magenta';
+	        this.speed = 5;
 	        for (let i = 0; i < 30; i++) {
-	            this.vel.y *= 0.94;
+	            this.speed *= 0.94;
 	            yield;
 	        }
 	        protospawn_1.protoSpawn.explosion({ pos: this.pos });

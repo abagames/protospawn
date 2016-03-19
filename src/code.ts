@@ -5,64 +5,98 @@ function setPsCode() {
         this.set({mechs: [
             new m.Condition.LimitActorCount().set({name: ['exploderPly', 'exploderEnm']})
         ]});
-        ps.ply();
-        ps.enm();
+        ps.ship({rename: 'shipPly', pos: {x: 50}});
+        ps.ship({raname: 'shipEnm'});
     }
-    ps.ply = function*(x = 50) {
-        let barrier = ps.barrier(this.pos);
-        this.set({pos: {x, y: 90}, baseSpeed: 2, size: 7, mechs: [
-            new m.AvatarMove.Direction().set({isVertical: false}),
-            new m.EndOfScreen.Clamp(),
-            new m.Collision.Test().set({name: ['bulletEnm', 'explosion'], do: (s, o) => {
+    ps.ship = function*(prop) {
+        let isPlayer = this.name === 'shipPly';
+        this.set(prop);
+        let bulletName = isPlayer ? 'bulletPly' : 'bulletEnm';
+        let fireAngle = isPlayer ? -p.HALF_PI : p.HALF_PI;
+        let exploderName = isPlayer ? 'exploderPly' : 'exploderEnm';
+        let colBulletName = isPlayer ? 'bulletEnm' : 'bulletPly';
+        let barrier = ps.barrier(this);
+        let barrierSensor = ps.barrierSensor(this, colBulletName);
+        this.isNearBullet = false;
+        let avatarMoveDirection = new m.AvatarMove.Direction().set({isVertical: false});
+        let button1Flip = new m.Random.Flip().set({probability: 0.1});
+        let button2Flip = new m.Random.Flip().set({toTrueProbability: 0.02, toFalseProbability: 0.1});
+        this.set({baseSpeed: 2, size: 7, collisionSizeRatio: 0.7, mechs: [
+            new m.Collision.Test().set({name: [colBulletName, 'explosion'], do: (s, o) => {
                 if (s.remove()) {
                     barrier.remove();
-                    ps.delaySpawn(30, ps.ply, [this.pos.x]);
-                }
-            }}),
-            new m.AvatarInput.KeyDown().set({key: p.Key.button2, interval: 5, do: () => {
-                if (!p.isKeyDown(p.Key.button1)) {
-                    ps.bullet({pos: this.pos, angle: -p.HALF_PI, rename: 'bulletPly'});
-                }
-            }}),
-            new m.AvatarInput.KeyPressed().set({key: p.Key.button3, do: () => {
-                if (!p.isKeyDown(p.Key.button1)) {
-                    ps.exploder({pos: this.pos, vel: {y: -5}, rename: 'exploderPly'});
+                    barrierSensor.remove();
+                    if (isPlayer) {
+                        ps.delaySpawn(30, ps.ship, {rename: 'shipPly', pos: {x: this.pos.x}});
+                    } else {
+                        ps.delaySpawn(30, ps.ship, {raname: 'shipEnm'});
+                    }
                 }
             }}),
             new m.Event.Frame().set({do: () => {
-                if (p.isKeyDown(p.Key.button1)) {
-                    this.mechs[0].speed = this.baseSpeed * 0.5;
+                if (isPlayer) {
+                    this.isButton1Down = p.isKeyDown(p.Key.button1);
+                    this.isButton2Down = p.isKeyDown(p.Key.button2);
                 } else {
-                    this.mechs[0].speed = this.baseSpeed;
+                    this.isButton1Down = button1Flip.value;
+                    this.isButton2Down = button2Flip.value;
                 }
-                barrier.isVisible = p.isKeyDown(p.Key.button1) || 
-                (this.vel.x === 0 && !p.isKeyDown(p.Key.button2) && !p.isKeyDown(p.Key.button3));
+                if (!this.isButton1Down && !this.isButton2Down && this.isNearBullet) {
+                    if (isPlayer) {
+                        avatarMoveDirection.speed = this.baseSpeed * 0.5;
+                    } else {
+                        this.speed = this.baseSpeed * 0.5;
+                    }
+                    barrier.isVisible = true;
+                } else {
+                    if (isPlayer) {
+                        avatarMoveDirection.speed = this.baseSpeed;
+                    } else {
+                        this.speed = this.baseSpeed;
+                    }
+                    barrier.isVisible = false;
+                }
+                this.isNearBullet = false;
+            }}),
+            new m.Event.Resource().set({count: 5, cond: () => this.isButton1Down, do: () => {
+                ps.bullet({pos: this.pos, angle: fireAngle, rename: bulletName});
+            }}),
+            new m.Event.Resource().set({cond: () => this.isButton2Down, do: () => {
+                ps.exploder({pos: this.pos, angle: fireAngle, rename: exploderName});
             }})
         ]});
+        if (isPlayer) {
+            this.pos.y = 90;
+            this.mechs = this.mechs.concat([
+                avatarMoveDirection,
+                new m.EndOfScreen.Clamp(),
+            ]);
+        } else {
+            this.pos.x = p.random(10, 90);
+            this.pos.y = 10;
+            this.angle = p.randomInt() * p.PI;
+            this.mechs = this.mechs.concat([
+                button1Flip, button2Flip,
+                new m.Event.Random().set({probability: 0.02, do: () => this.angle += p.PI }),
+                new m.EndOfScreen.ReflectAngle()
+            ]);
+        }
     }
-    ps.barrier = function*(pos) {
-        this.size = 18;
+    ps.barrier = function*(parent) {
+        this.size = 15;
+        this.collisionSizeRatio = 1.5;
         this.fill = 'rgba(0, 0, 0, 0)';
-        this.pos = pos;
+        this.pos = parent.pos;
     }
-    ps.enm = function*() {
-        this.set({
-            pos: {x: p.random(0, 100), y: 10}, 
-            vel: {x: p.randomPlusMinus() * 2, y: 0}, 
-            size: 7, 
-            mechs: [
-            new m.Event.Random().set({probability: 0.02, do: (a) => a.vel.x *= -1 }),
-            new m.EndOfScreen.Bounce(),
-            new m.Collision.Test().set({name: ['bulletPly', 'explosion'], do: (s, o) => {
-                if (s.remove()) {
-                    ps.delaySpawn(30, ps.enm)
-                }
-            }}),
-            new m.Event.Random().set({probability: 0.05, do: (a) => {
-                ps.bullet({pos: this.pos, angle: p.HALF_PI, rename: 'bulletEnm'});
-                ps.exploder({pos: this.pos, vel: {y: 5}, rename: 'exploderEnm'});
-            }}),
-        ]});
+    ps.barrierSensor = function*(parent, bulletName) {
+        this.size = 50;
+        this.draw = () => {};
+        this.pos = parent.pos;
+        this.mechs = [
+            new m.Collision.Test().set({name: bulletName, do: (s, o) => {
+                parent.isNearBullet = true;
+            }})
+        ];
     }
     ps.bullet = function*(prop) {
         this.set(prop);
@@ -73,8 +107,10 @@ function setPsCode() {
     }
     ps.exploder = function*(prop) {
         this.set(prop);
+        this.stroke = 'magenta';
+        this.speed = 5;
         for (let i = 0; i < 30; i++) {
-            this.vel.y *= 0.94;
+            this.speed *= 0.94;
             yield;
         }
         ps.explosion({pos: this.pos});
