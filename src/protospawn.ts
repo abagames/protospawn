@@ -39,12 +39,13 @@ window.onload = () => {
 };
 
 function addUtilFuncs() {
-    protoSpawn.simple = function* (json) {
+    protoSpawn.simple = function* (json: any) {
         this.set(json);
     };
-    protoSpawn.delaySpawn = function* (wait, spawnFunc, args = null) {
+    protoSpawn.delaySpawn = function* (wait: number, spawnFunc: Function, arg: any = null) {
         yield wait;
-        spawnFunc.apply(this, args);
+        let a = _.isArray(arg) ? arg : [arg];
+        spawnFunc.apply(this, a);
         this.remove();
     };
 }
@@ -56,6 +57,7 @@ const functionToActorHook = {
             return function(...args) {
                 if (args.length > 0 && args[0].rename != null) {
                     name = args[0].rename;
+                    args[0].rename = null;
                 }
                 const actor = new Actor(name);
                 actor.generator = targetObj.apply(actor, args);
