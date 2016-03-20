@@ -21,15 +21,22 @@ function setPsCode() {
         let avatarMoveDirection = new m.AvatarMove.Direction().set({isVertical: false});
         let button1Flip = new m.Random.Flip().set({probability: 0.1});
         let button2Flip = new m.Random.Flip().set({toTrueProbability: 0.02, toFalseProbability: 0.1});
+        this.shield = 100;
         this.set({baseSpeed: 2, size: 7, collisionSizeRatio: 0.7, mechs: [
             new m.Collision.Test().set({name: [colBulletName, 'explosion'], do: (s, o) => {
-                if (s.remove()) {
-                    barrier.remove();
-                    barrierSensor.remove();
-                    if (isPlayer) {
-                        ps.delaySpawn(30, ps.ship, {rename: 'shipPly', pos: {x: this.pos.x}});
-                    } else {
-                        ps.delaySpawn(30, ps.ship, {raname: 'shipEnm'});
+                s.shield -= o.name == colBulletName ? 10 : 5;
+                if (o.name === colBulletName) {
+                    o.remove();
+                }
+                if (s.shield <= 0) {
+                    if (s.remove()) {
+                        barrier.remove();
+                        barrierSensor.remove();
+                        if (isPlayer) {
+                            ps.delaySpawn(30, ps.ship, {rename: 'shipPly', pos: {x: this.pos.x}});
+                        } else {
+                            ps.delaySpawn(30, ps.ship, {raname: 'shipEnm'});
+                        }
                     }
                 }
             }}),
@@ -57,6 +64,12 @@ function setPsCode() {
                     barrier.isVisible = false;
                 }
                 this.isNearBullet = false;
+                if (isPlayer) {
+                    p.rect(0, 97, this.shield, 1);
+                } else {
+                    p.rect(0, 2, this.shield, 1);
+                }
+                this.shield = p.clamp(this.shield + 0.1, 0, 100);
             }}),
             new m.Event.Resource().set({count: 5, cond: () => this.isButton1Down, do: () => {
                 ps.bullet({pos: this.pos, angle: fireAngle, rename: bulletName});

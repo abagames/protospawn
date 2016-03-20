@@ -45713,11 +45713,6 @@
 	                    return;
 	                }
 	                a.angle += oa;
-	                /*if (oa > 0) {
-	                    a.angle += p.PI - oa;
-	                } else {
-	                    a.angle += -p.PI - oa;
-	                }*/
 	            }
 	        }
 	        EndOfScreen.ReflectAngle = ReflectAngle;
@@ -46015,16 +46010,23 @@
 	        let avatarMoveDirection = new protospawn_1.mech.AvatarMove.Direction().set({ isVertical: false });
 	        let button1Flip = new protospawn_1.mech.Random.Flip().set({ probability: 0.1 });
 	        let button2Flip = new protospawn_1.mech.Random.Flip().set({ toTrueProbability: 0.02, toFalseProbability: 0.1 });
+	        this.shield = 100;
 	        this.set({ baseSpeed: 2, size: 7, collisionSizeRatio: 0.7, mechs: [
 	                new protospawn_1.mech.Collision.Test().set({ name: [colBulletName, 'explosion'], do: (s, o) => {
-	                        if (s.remove()) {
-	                            barrier.remove();
-	                            barrierSensor.remove();
-	                            if (isPlayer) {
-	                                protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ship, { rename: 'shipPly', pos: { x: this.pos.x } });
-	                            }
-	                            else {
-	                                protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ship, { raname: 'shipEnm' });
+	                        s.shield -= o.name == colBulletName ? 10 : 5;
+	                        if (o.name === colBulletName) {
+	                            o.remove();
+	                        }
+	                        if (s.shield <= 0) {
+	                            if (s.remove()) {
+	                                barrier.remove();
+	                                barrierSensor.remove();
+	                                if (isPlayer) {
+	                                    protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ship, { rename: 'shipPly', pos: { x: this.pos.x } });
+	                                }
+	                                else {
+	                                    protospawn_1.protoSpawn.delaySpawn(30, protospawn_1.protoSpawn.ship, { raname: 'shipEnm' });
+	                                }
 	                            }
 	                        }
 	                    } }),
@@ -46056,6 +46058,13 @@
 	                            barrier.isVisible = false;
 	                        }
 	                        this.isNearBullet = false;
+	                        if (isPlayer) {
+	                            protospawn_1.p5js.rect(0, 97, this.shield, 1);
+	                        }
+	                        else {
+	                            protospawn_1.p5js.rect(0, 2, this.shield, 1);
+	                        }
+	                        this.shield = protospawn_1.p5js.clamp(this.shield + 0.1, 0, 100);
 	                    } }),
 	                new protospawn_1.mech.Event.Resource().set({ count: 5, cond: () => this.isButton1Down, do: () => {
 	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: fireAngle, rename: bulletName });

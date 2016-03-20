@@ -168,11 +168,6 @@ module Mech {
                     return;
                 }
                 a.angle += oa;
-                /*if (oa > 0) {
-                    a.angle += p.PI - oa;
-                } else {
-                    a.angle += -p.PI - oa;
-                }*/
             }
         }
     }
