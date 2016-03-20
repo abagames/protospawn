@@ -116,6 +116,24 @@ module Mech {
             }
         }
     }
+    
+    export module Move {
+        export class Chase extends Mech {
+            target: Actor;
+            ratio = 1;
+            isVertical = true;
+            isHorizontal = true;
+            
+            update(a: Actor) {
+                if (this.isHorizontal) {
+                    a.pos.x += (this.target.pos.x - a.pos.x) * this.ratio;
+                }
+                if (this.isVertical) {
+                    a.pos.y += (this.target.pos.y - a.pos.y) * this.ratio;
+                }
+            }
+        }
+    }
 
     export module EndOfScreen {
         export class Clamp extends Mech {
