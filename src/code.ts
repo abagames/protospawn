@@ -1,47 +1,44 @@
 import {protoSpawn as ps, p5js as p, mech as m} from './protospawn';
+import Actor from './actor';
 
 function setPsCode() {
     ps.main = function*() {
-        this.set({mechs: [
-            new m.Condition.LimitActorCount().set({name: ['exploderPly', 'exploderEnm']})
-        ]});
-        ps.ship({rename: 'shipPly', pos: {x: 50}});
-        ps.ship({raname: 'shipEnm'});
+        ps.ship({isPlayer: true, pos: {x: 50}});
+        ps.ship({isPlayer: false});
     }
     ps.ship = function*(prop) {
-        let isPlayer = this.name === 'shipPly';
         this.set(prop);
-        let bulletName = isPlayer ? 'bulletPly' : 'bulletEnm';
-        let fireAngle = isPlayer ? -p.HALF_PI : p.HALF_PI;
-        let exploderName = isPlayer ? 'exploderPly' : 'exploderEnm';
-        let colBulletName = isPlayer ? 'bulletEnm' : 'bulletPly';
         let barrier = ps.barrier(this);
-        let barrierSensor = ps.barrierSensor(this, colBulletName);
+        let barrierSensor = ps.barrierSensor(this);
         this.isNearBullet = false;
         let avatarMoveDirection = new m.AvatarMove.Direction().set({isVertical: false});
         let button1Flip = new m.Random.Flip().set({probability: 0.1});
         let button2Flip = new m.Random.Flip().set({toTrueProbability: 0.02, toFalseProbability: 0.1});
+        let fireAngle = this.isPlayer ? -p.HALF_PI : p.HALF_PI;
         this.shield = 100;
         this.set({baseSpeed: 2, size: 7, collisionSizeRatio: 0.7, mechs: [
-            new m.Collision.Test().set({name: [colBulletName, 'explosion'], do: (s, o) => {
-                s.shield -= o.name == colBulletName ? 10 : 5;
-                if (o.name === colBulletName) {
+            new m.Collision.Test().set({name: ['bullet', 'explosion'], do: (s, o) => {
+                if (this.isPlayer === o.isPlayer) {
+                    return;
+                }
+                s.shield -= o.name == 'bullet' ? 20 : 3;
+                if (o.name === 'bullet') {
                     o.remove();
                 }
                 if (s.shield <= 0) {
                     if (s.remove()) {
                         barrier.remove();
                         barrierSensor.remove();
-                        if (isPlayer) {
-                            ps.delaySpawn(30, ps.ship, {rename: 'shipPly', pos: {x: this.pos.x}});
+                        if (this.isPlayer) {
+                            ps.delaySpawn(30, ps.ship, {isPlayer: this.isPlayer, pos: {x: this.pos.x}});
                         } else {
-                            ps.delaySpawn(30, ps.ship, {raname: 'shipEnm'});
+                            ps.delaySpawn(30, ps.ship, {isPlayer: this.isPlayer});
                         }
                     }
                 }
             }}),
             new m.Event.Frame().set({do: () => {
-                if (isPlayer) {
+                if (this.isPlayer) {
                     this.isButton1Down = p.isKeyDown(p.Key.button1);
                     this.isButton2Down = p.isKeyDown(p.Key.button2);
                 } else {
@@ -49,14 +46,14 @@ function setPsCode() {
                     this.isButton2Down = button2Flip.value;
                 }
                 if (!this.isButton1Down && !this.isButton2Down && this.isNearBullet) {
-                    if (isPlayer) {
+                    if (this.isPlayer) {
                         avatarMoveDirection.speed = this.baseSpeed * 0.5;
                     } else {
                         this.speed = this.baseSpeed * 0.5;
                     }
                     barrier.isVisible = true;
                 } else {
-                    if (isPlayer) {
+                    if (this.isPlayer) {
                         avatarMoveDirection.speed = this.baseSpeed;
                     } else {
                         this.speed = this.baseSpeed;
@@ -64,7 +61,7 @@ function setPsCode() {
                     barrier.isVisible = false;
                 }
                 this.isNearBullet = false;
-                if (isPlayer) {
+                if (this.isPlayer) {
                     p.rect(0, 97, this.shield, 1);
                 } else {
                     p.rect(0, 2, this.shield, 1);
@@ -72,13 +69,15 @@ function setPsCode() {
                 this.shield = p.clamp(this.shield + 0.1, 0, 100);
             }}),
             new m.Event.Resource().set({count: 5, cond: () => this.isButton1Down, do: () => {
-                ps.bullet({pos: this.pos, angle: fireAngle, rename: bulletName});
+                ps.bullet({pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer});
             }}),
             new m.Event.Resource().set({cond: () => this.isButton2Down, do: () => {
-                ps.exploder({pos: this.pos, angle: fireAngle, rename: exploderName});
+                if (_.filter(Actor.get('exploder'), (a: any) => a.isPlayer === this.isPlayer).length < 1) { 
+                    ps.exploder({pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer});
+                }
             }})
         ]});
-        if (isPlayer) {
+        if (this.isPlayer) {
             this.pos.y = 90;
             this.mechs = this.mechs.concat([
                 avatarMoveDirection,
@@ -101,13 +100,16 @@ function setPsCode() {
         this.fill = 'rgba(0, 0, 0, 0)';
         this.pos = parent.pos;
     }
-    ps.barrierSensor = function*(parent, bulletName) {
+    ps.barrierSensor = function*(parent) {
         this.size = 50;
         this.draw = () => {};
         this.pos = parent.pos;
+        this.isPlayer = parent.isPlayer;
         this.mechs = [
-            new m.Collision.Test().set({name: bulletName, do: (s, o) => {
-                parent.isNearBullet = true;
+            new m.Collision.Test().set({name: 'bullet', do: (s, o) => {
+                if (this.isPlayer != o.isPlayer) {
+                    parent.isNearBullet = true;
+                }
             }})
         ];
     }
