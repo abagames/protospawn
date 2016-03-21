@@ -45659,6 +45659,26 @@
 	        }
 	        AvatarInput.KeyReleased = KeyReleased;
 	    })(AvatarInput = Mech.AvatarInput || (Mech.AvatarInput = {}));
+	    var Move;
+	    (function (Move) {
+	        class Chase extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.ratio = 1;
+	                this.isVertical = true;
+	                this.isHorizontal = true;
+	            }
+	            update(a) {
+	                if (this.isHorizontal) {
+	                    a.pos.x += (this.target.pos.x - a.pos.x) * this.ratio;
+	                }
+	                if (this.isVertical) {
+	                    a.pos.y += (this.target.pos.y - a.pos.y) * this.ratio;
+	                }
+	            }
+	        }
+	        Move.Chase = Chase;
+	    })(Move = Mech.Move || (Mech.Move = {}));
 	    var EndOfScreen;
 	    (function (EndOfScreen) {
 	        class Clamp extends Mech {
@@ -46001,11 +46021,19 @@
 	        let barrierSensor = protospawn_1.protoSpawn.barrierSensor(this);
 	        this.isNearBullet = false;
 	        let avatarMoveDirection = new protospawn_1.mech.AvatarMove.Direction().set({ isVertical: false });
+	        let baseSpeed = 2;
+	        let changeAvatarSpeed = this.isPlayer ?
+	                (ratio) => {
+	                avatarMoveDirection.speed = baseSpeed * ratio;
+	            } :
+	                (ratio) => {
+	                this.speed = baseSpeed * ratio;
+	            };
 	        let button1Flip = new protospawn_1.mech.Random.Flip().set({ probability: 0.1 });
 	        let button2Flip = new protospawn_1.mech.Random.Flip().set({ toTrueProbability: 0.02, toFalseProbability: 0.1 });
 	        let fireAngle = this.isPlayer ? -protospawn_1.p5js.HALF_PI : protospawn_1.p5js.HALF_PI;
 	        this.shield = 100;
-	        this.set({ baseSpeed: 2, size: 7, collisionSizeRatio: 0.7, mechs: [
+	        this.set({ size: 7, collisionSizeRatio: 0.7, mechs: [
 	                new protospawn_1.mech.Collision.Test().set({ name: ['bullet', 'explosion'], do: (s, o) => {
 	                        if (this.isPlayer === o.isPlayer) {
 	                            return;
@@ -46037,21 +46065,11 @@
 	                            this.isButton2Down = button2Flip.value;
 	                        }
 	                        if (!this.isButton1Down && !this.isButton2Down && this.isNearBullet) {
-	                            if (this.isPlayer) {
-	                                avatarMoveDirection.speed = this.baseSpeed * 0.5;
-	                            }
-	                            else {
-	                                this.speed = this.baseSpeed * 0.5;
-	                            }
+	                            changeAvatarSpeed(0.5);
 	                            barrier.isVisible = true;
 	                        }
 	                        else {
-	                            if (this.isPlayer) {
-	                                avatarMoveDirection.speed = this.baseSpeed;
-	                            }
-	                            else {
-	                                this.speed = this.baseSpeed;
-	                            }
+	                            changeAvatarSpeed(1);
 	                            barrier.isVisible = false;
 	                        }
 	                        this.isNearBullet = false;

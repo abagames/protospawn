@@ -12,11 +12,19 @@ function setPsCode() {
         let barrierSensor = ps.barrierSensor(this);
         this.isNearBullet = false;
         let avatarMoveDirection = new m.AvatarMove.Direction().set({isVertical: false});
+        let baseSpeed = 2;
+        let changeAvatarSpeed = this.isPlayer ?
+            (ratio) => {
+                avatarMoveDirection.speed = baseSpeed * ratio;
+            } :
+            (ratio) => {
+                this.speed = baseSpeed * ratio;
+            };
         let button1Flip = new m.Random.Flip().set({probability: 0.1});
         let button2Flip = new m.Random.Flip().set({toTrueProbability: 0.02, toFalseProbability: 0.1});
         let fireAngle = this.isPlayer ? -p.HALF_PI : p.HALF_PI;
         this.shield = 100;
-        this.set({baseSpeed: 2, size: 7, collisionSizeRatio: 0.7, mechs: [
+        this.set({size: 7, collisionSizeRatio: 0.7, mechs: [
             new m.Collision.Test().set({name: ['bullet', 'explosion'], do: (s, o) => {
                 if (this.isPlayer === o.isPlayer) {
                     return;
@@ -46,18 +54,10 @@ function setPsCode() {
                     this.isButton2Down = button2Flip.value;
                 }
                 if (!this.isButton1Down && !this.isButton2Down && this.isNearBullet) {
-                    if (this.isPlayer) {
-                        avatarMoveDirection.speed = this.baseSpeed * 0.5;
-                    } else {
-                        this.speed = this.baseSpeed * 0.5;
-                    }
+                    changeAvatarSpeed(0.5);
                     barrier.isVisible = true;
                 } else {
-                    if (this.isPlayer) {
-                        avatarMoveDirection.speed = this.baseSpeed;
-                    } else {
-                        this.speed = this.baseSpeed;
-                    }
+                    changeAvatarSpeed(1);
                     barrier.isVisible = false;
                 }
                 this.isNearBullet = false;
