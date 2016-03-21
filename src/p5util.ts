@@ -32,8 +32,8 @@ function p5Util(p5, p: p5) {
             return w + o % w + min;
         }
     }
-    p5.prototype.normalizeAngle = function(v: number): number {
-        return p.wrap(v, -p.PI, p.PI);
+    p5.prototype.normalizeAngle = function(v: number, toPositive = false): number {
+        return toPositive ? p.wrap(v, 0, p.TWO_PI) : p.wrap(v, -p.PI, p.PI);
     }
     p5.prototype.isIn = function(v: number, min: number = 0, max: number = 1, padding: number = 0): boolean {
         return (v >= min - padding && v <= max + padding);

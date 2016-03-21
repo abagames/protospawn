@@ -52,7 +52,7 @@ declare class p5 {
     randomPlusMinus(): number;
     clamp(v: number, min?: number, max?: number): number;
     wrap(v: number, min?: number, max?: number): number;
-    normalizeAngle(v: number): number;
+    normalizeAngle(v: number, toPositive?: boolean): number;
     isIn(v: number, min?: number, max?: number, padding?: number): boolean;
     Key: { up: number[], right: number[], down: number[], left: number[],
         button1: number[], button2: number[], button3: number[], button4: number[],
