@@ -90,6 +90,7 @@ function setPsCode() {
             this.mechs = this.mechs.concat([
                 button1Flip, button2Flip,
                 new m.Event.Random().set({probability: 0.02, do: () => this.angle += p.PI }),
+                new m.Move.LimitAngle().set({count: 2, isVertical: true}),
                 new m.EndOfScreen.ReflectAngle()
             ]);
         }

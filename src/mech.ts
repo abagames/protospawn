@@ -133,6 +133,18 @@ module Mech {
                 }
             }
         }
+        
+        export class LimitAngle extends Mech {
+            count = 4;
+            isVertical = false;
+            
+            update(a: Actor) {
+                let angleWidth = p.TWO_PI /  this.count;
+                let startAngle = this.isVertical ? 0 : p.HALF_PI;
+                let aa = p.normalizeAngle(a.angle - startAngle + angleWidth / 2, true);
+                a.angle = Math.floor(aa / angleWidth) * angleWidth + startAngle;
+            }
+        }
     }
 
     export module EndOfScreen {
