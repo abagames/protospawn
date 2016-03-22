@@ -114,7 +114,7 @@
 	        return this;
 	    }
 	    postUpdate() {
-	        if (this.prevSize != this.size) {
+	        if (this.prevSize !== this.size) {
 	            this.width = this.height = this.size;
 	            this.prevSize = this.size;
 	        }
@@ -45678,6 +45678,42 @@
 	            }
 	        }
 	        Move.Chase = Chase;
+	        class ChaseOffset extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.ratio = 1;
+	                this.isVertical = true;
+	                this.isHorizontal = true;
+	            }
+	            update(a) {
+	                if (this.ppos == null) {
+	                    this.ppos = protospawn_1.p5js.vector().set(this.target.pos);
+	                    return;
+	                }
+	                if (this.isHorizontal) {
+	                    a.pos.x += (this.target.pos.x - this.ppos.x) * this.ratio;
+	                }
+	                if (this.isVertical) {
+	                    a.pos.y += (this.target.pos.y - this.ppos.y) * this.ratio;
+	                }
+	                this.ppos.set(this.target.pos);
+	            }
+	        }
+	        Move.ChaseOffset = ChaseOffset;
+	        class LimitAngle extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.count = 4;
+	                this.isVertical = false;
+	            }
+	            update(a) {
+	                let angleWidth = protospawn_1.p5js.TWO_PI / this.count;
+	                let startAngle = this.isVertical ? 0 : protospawn_1.p5js.HALF_PI;
+	                let aa = protospawn_1.p5js.normalizeAngle(a.angle - startAngle + angleWidth / 2, true);
+	                a.angle = Math.floor(aa / angleWidth) * angleWidth + startAngle;
+	            }
+	        }
+	        Move.LimitAngle = LimitAngle;
 	    })(Move = Mech.Move || (Mech.Move = {}));
 	    var EndOfScreen;
 	    (function (EndOfScreen) {
@@ -45916,8 +45952,8 @@
 	            return w + o % w + min;
 	        }
 	    };
-	    p5.prototype.normalizeAngle = function (v) {
-	        return p.wrap(v, -p.PI, p.PI);
+	    p5.prototype.normalizeAngle = function (v, toPositive = false) {
+	        return toPositive ? p.wrap(v, 0, p.TWO_PI) : p.wrap(v, -p.PI, p.PI);
 	    };
 	    p5.prototype.isIn = function (v, min = 0, max = 1, padding = 0) {
 	        return (v >= min - padding && v <= max + padding);
@@ -46032,13 +46068,15 @@
 	        let button1Flip = new protospawn_1.mech.Random.Flip().set({ probability: 0.1 });
 	        let button2Flip = new protospawn_1.mech.Random.Flip().set({ toTrueProbability: 0.02, toFalseProbability: 0.1 });
 	        let fireAngle = this.isPlayer ? -protospawn_1.p5js.HALF_PI : protospawn_1.p5js.HALF_PI;
+	        let weaponType = protospawn_1.p5js.randomInt(0, 1);
 	        this.shield = 100;
 	        this.set({ size: 7, collisionSizeRatio: 0.7, mechs: [
-	                new protospawn_1.mech.Collision.Test().set({ name: ['bullet', 'explosion'], do: (s, o) => {
+	                new protospawn_1.mech.Collision.Test().set({ name: ['bullet', 'explosion', 'laser'], do: (s, o) => {
 	                        if (this.isPlayer === o.isPlayer) {
 	                            return;
 	                        }
-	                        s.shield -= o.name == 'bullet' ? 20 : 3;
+	                        let damage = { bullet: 20, explosion: 3, laser: 2 };
+	                        s.shield -= damage[o.name];
 	                        if (o.name === 'bullet') {
 	                            o.remove();
 	                        }
@@ -46069,8 +46107,10 @@
 	                            barrier.isVisible = true;
 	                        }
 	                        else {
-	                            changeAvatarSpeed(1);
-	                            barrier.isVisible = false;
+	                            if (_.filter(actor_1.default.get('laserTurret'), (a) => a.isPlayer === this.isPlayer).length < 1) {
+	                                changeAvatarSpeed(1);
+	                                barrier.isVisible = false;
+	                            }
 	                        }
 	                        this.isNearBullet = false;
 	                        if (this.isPlayer) {
@@ -46085,8 +46125,17 @@
 	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer });
 	                    } }),
 	                new protospawn_1.mech.Event.Resource().set({ cond: () => this.isButton2Down, do: () => {
-	                        if (_.filter(actor_1.default.get('exploder'), (a) => a.isPlayer === this.isPlayer).length < 1) {
-	                            protospawn_1.protoSpawn.exploder({ pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer });
+	                        switch (weaponType) {
+	                            case 0:
+	                                if (_.filter(actor_1.default.get('exploder'), (a) => a.isPlayer === this.isPlayer).length < 1) {
+	                                    protospawn_1.protoSpawn.exploder({ pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer });
+	                                }
+	                                break;
+	                            case 1:
+	                                if (_.filter(actor_1.default.get('laserTurret'), (a) => a.isPlayer === this.isPlayer).length < 1) {
+	                                    protospawn_1.protoSpawn.laserTurret(this, changeAvatarSpeed);
+	                                }
+	                                break;
 	                        }
 	                    } })
 	            ] });
@@ -46104,6 +46153,7 @@
 	            this.mechs = this.mechs.concat([
 	                button1Flip, button2Flip,
 	                new protospawn_1.mech.Event.Random().set({ probability: 0.02, do: () => this.angle += protospawn_1.p5js.PI }),
+	                new protospawn_1.mech.Move.LimitAngle().set({ count: 2, isVertical: true }),
 	                new protospawn_1.mech.EndOfScreen.ReflectAngle()
 	            ]);
 	        }
@@ -46157,6 +46207,52 @@
 	            yield;
 	        }
 	        this.remove();
+	    };
+	    protospawn_1.protoSpawn.laserTurret = function* (parent, changeAvatarSpeed) {
+	        this.isVisible = false;
+	        this.isPlayer = parent.isPlayer;
+	        let size = 0.5;
+	        for (let i = 0; i < 10; i++) {
+	            protospawn_1.protoSpawn.laser(parent, size);
+	            changeAvatarSpeed(1 - i * 0.09);
+	            yield;
+	        }
+	        for (let i = 0; i < 20; i++) {
+	            if (i < 10) {
+	                size += 0.2;
+	            }
+	            protospawn_1.protoSpawn.laser(parent, size);
+	            changeAvatarSpeed(0.1);
+	            yield;
+	        }
+	        for (let i = 0; i < 10; i++) {
+	            protospawn_1.protoSpawn.laser(parent, size);
+	            size -= 0.2;
+	            yield;
+	        }
+	        for (let i = 0; i < 10; i++) {
+	            changeAvatarSpeed(0.1 + i * 0.09);
+	            yield;
+	        }
+	        this.remove();
+	    };
+	    protospawn_1.protoSpawn.laser = function* (parent, size) {
+	        this.pos.set(parent.pos);
+	        this.isPlayer = parent.isPlayer;
+	        this.vel.x = protospawn_1.p5js.random(-size, size);
+	        this.vel.y = parent.isPlayer ? -2 : 2;
+	        this.stroke = 'cyan';
+	        this.bsize = size;
+	        this.mechs = [
+	            new protospawn_1.mech.Event.Frame().set({ do: () => {
+	                    this.bsize *= 1.05;
+	                    this.width = this.bsize / 2;
+	                    this.height = this.bsize * 2;
+	                    this.vel.x *= 0.8;
+	                    this.vel.y *= 1.05;
+	                } }),
+	            new protospawn_1.mech.Move.ChaseOffset().set({ target: parent, isVertical: false })
+	        ];
 	    };
 	}
 	exports.default = setPsCode;

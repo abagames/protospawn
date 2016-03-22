@@ -23,13 +23,15 @@ function setPsCode() {
         let button1Flip = new m.Random.Flip().set({probability: 0.1});
         let button2Flip = new m.Random.Flip().set({toTrueProbability: 0.02, toFalseProbability: 0.1});
         let fireAngle = this.isPlayer ? -p.HALF_PI : p.HALF_PI;
+        let weaponType = p.randomInt(0, 1);
         this.shield = 100;
         this.set({size: 7, collisionSizeRatio: 0.7, mechs: [
-            new m.Collision.Test().set({name: ['bullet', 'explosion'], do: (s, o) => {
+            new m.Collision.Test().set({name: ['bullet', 'explosion', 'laser'], do: (s, o) => {
                 if (this.isPlayer === o.isPlayer) {
                     return;
                 }
-                s.shield -= o.name == 'bullet' ? 20 : 3;
+                let damage = {bullet: 20, explosion: 3, laser : 2};
+                s.shield -= damage[o.name];
                 if (o.name === 'bullet') {
                     o.remove();
                 }
@@ -57,8 +59,11 @@ function setPsCode() {
                     changeAvatarSpeed(0.5);
                     barrier.isVisible = true;
                 } else {
-                    changeAvatarSpeed(1);
-                    barrier.isVisible = false;
+                    if (_.filter(Actor.get('laserTurret'),
+                    (a: any) => a.isPlayer === this.isPlayer).length < 1) {
+                        changeAvatarSpeed(1);
+                        barrier.isVisible = false;
+                    }
                 }
                 this.isNearBullet = false;
                 if (this.isPlayer) {
@@ -72,8 +77,19 @@ function setPsCode() {
                 ps.bullet({pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer});
             }}),
             new m.Event.Resource().set({cond: () => this.isButton2Down, do: () => {
-                if (_.filter(Actor.get('exploder'), (a: any) => a.isPlayer === this.isPlayer).length < 1) { 
-                    ps.exploder({pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer});
+                switch (weaponType) {
+                    case 0:
+                        if (_.filter(Actor.get('exploder'),
+                        (a: any) => a.isPlayer === this.isPlayer).length < 1) { 
+                            ps.exploder({pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer});
+                        }
+                        break;
+                    case 1:
+                        if (_.filter(Actor.get('laserTurret'),
+                        (a: any) => a.isPlayer === this.isPlayer).length < 1) {
+                            ps.laserTurret(this, changeAvatarSpeed);
+                        }
+                        break;
                 }
             }})
         ]});
@@ -144,6 +160,52 @@ function setPsCode() {
             yield;
         }
         this.remove();
+    }
+    ps.laserTurret = function*(parent, changeAvatarSpeed) {
+        this.isVisible = false;
+        this.isPlayer = parent.isPlayer;
+        let size = 0.5;
+        for (let i = 0; i < 10; i++) {
+            ps.laser(parent, size);
+            changeAvatarSpeed(1 - i * 0.09);
+            yield;
+        }
+        for (let i = 0; i < 20 ; i++) {
+            if (i < 10) {
+                size += 0.2;
+            }
+            ps.laser(parent, size);
+            changeAvatarSpeed(0.1);
+            yield;
+        }
+        for (let i = 0; i < 10 ; i++) {
+            ps.laser(parent, size);
+            size -= 0.2;
+            yield;
+        }
+        for (let i = 0; i < 10 ; i++) {
+            changeAvatarSpeed(0.1 + i * 0.09);
+            yield;
+        }
+        this.remove();
+    }
+    ps.laser = function*(parent, size) {
+        this.pos.set(parent.pos);
+        this.isPlayer = parent.isPlayer;
+        this.vel.x = p.random(-size, size);
+        this.vel.y = parent.isPlayer ? -2 : 2;
+        this.stroke = 'cyan';
+        this.bsize = size;
+        this.mechs = [
+            new m.Event.Frame().set({do: () => {
+                this.bsize *= 1.05;
+                this.width = this.bsize / 2;
+                this.height = this.bsize * 2;
+                this.vel.x *= 0.8;
+                this.vel.y *= 1.05;
+            }}),
+            new m.Move.ChaseOffset().set({target: parent, isVertical: false})
+        ];       
     }
 }
 export default setPsCode;

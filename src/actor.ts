@@ -69,7 +69,7 @@ class Actor {
     }
 
     postUpdate() {
-        if (this.prevSize != this.size) {
+        if (this.prevSize !== this.size) {
             this.width = this.height = this.size;
             this.prevSize = this.size;
         }

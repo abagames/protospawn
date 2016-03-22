@@ -134,6 +134,28 @@ module Mech {
             }
         }
         
+        export class ChaseOffset extends Mech {
+            target: Actor;
+            ratio = 1;
+            isVertical = true;
+            isHorizontal = true;
+            ppos: p5.Vector;
+            
+            update(a: Actor) {
+                if (this.ppos == null) {
+                    this.ppos = p.vector().set(this.target.pos);
+                    return;
+                }
+                if (this.isHorizontal) {
+                    a.pos.x += (this.target.pos.x - this.ppos.x) * this.ratio;
+                }
+                if (this.isVertical) {
+                    a.pos.y += (this.target.pos.y - this.ppos.y) * this.ratio;
+                }
+                this.ppos.set(this.target.pos);
+            }
+        }
+        
         export class LimitAngle extends Mech {
             count = 4;
             isVertical = false;
