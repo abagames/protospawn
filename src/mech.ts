@@ -156,6 +156,17 @@ module Mech {
             }
         }
         
+        export class ChaseVel extends Mech {
+            target: Actor;
+            verticalSpeed = 0.001;
+            horizontalSpeed = 0.001;
+            
+            update(a: Actor) {
+                a.vel.x += (this.target.pos.x - a.pos.x) * this.verticalSpeed;
+                a.vel.y += (this.target.pos.y - a.pos.y) * this.horizontalSpeed;
+            }
+        }
+        
         export class LimitAngle extends Mech {
             count = 4;
             isVertical = false;

@@ -23,16 +23,17 @@ function setPsCode() {
         let button1Flip = new m.Random.Flip().set({probability: 0.1});
         let button2Flip = new m.Random.Flip().set({toTrueProbability: 0.02, toFalseProbability: 0.1});
         let fireAngle = this.isPlayer ? -p.HALF_PI : p.HALF_PI;
-        let weaponType = p.randomInt(0, 1);
+        let weaponType = p.randomInt(0, 2);
+        let existsWeapon = (name) => _.some(Actor.get(name), (a: any) => a.isPlayer === this.isPlayer);
         this.shield = 100;
         this.set({size: 7, collisionSizeRatio: 0.7, mechs: [
-            new m.Collision.Test().set({name: ['bullet', 'explosion', 'laser'], do: (s, o) => {
+            new m.Collision.Test().set({name: ['bullet', 'explosion', 'laser', 'missile'], do: (s, o) => {
                 if (this.isPlayer === o.isPlayer) {
                     return;
                 }
-                let damage = {bullet: 20, explosion: 3, laser : 2};
+                let damage = {bullet: 20, explosion: 3, laser : 2, missile: 10};
                 s.shield -= damage[o.name];
-                if (o.name === 'bullet') {
+                if (o.name === 'bullet' || o.name === 'missile') {
                     o.remove();
                 }
                 if (s.shield <= 0) {
@@ -55,15 +56,17 @@ function setPsCode() {
                     this.isButton1Down = button1Flip.value;
                     this.isButton2Down = button2Flip.value;
                 }
-                if (!this.isButton1Down && !this.isButton2Down && this.isNearBullet) {
+                if (!existsWeapon('exploder') &&
+                    !existsWeapon('laserTurret') &&
+                    !existsWeapon('missileTurret') &&
+                    !this.isButton1Down && !this.isButton2Down && this.isNearBullet) {
                     changeAvatarSpeed(0.5);
                     barrier.isVisible = true;
                 } else {
-                    if (_.filter(Actor.get('laserTurret'),
-                    (a: any) => a.isPlayer === this.isPlayer).length < 1) {
+                    if (!existsWeapon('laserTurret')) {
                         changeAvatarSpeed(1);
-                        barrier.isVisible = false;
                     }
+                    barrier.isVisible = false;
                 }
                 this.isNearBullet = false;
                 if (this.isPlayer) {
@@ -79,15 +82,21 @@ function setPsCode() {
             new m.Event.Resource().set({cond: () => this.isButton2Down, do: () => {
                 switch (weaponType) {
                     case 0:
-                        if (_.filter(Actor.get('exploder'),
-                        (a: any) => a.isPlayer === this.isPlayer).length < 1) { 
+                        if (!existsWeapon('exploder')) {
                             ps.exploder({pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer});
                         }
                         break;
                     case 1:
-                        if (_.filter(Actor.get('laserTurret'),
-                        (a: any) => a.isPlayer === this.isPlayer).length < 1) {
+                        if (!existsWeapon('laserTurret')) {
                             ps.laserTurret(this, changeAvatarSpeed);
+                        }
+                        break;
+                    case 2:
+                        if (!existsWeapon('missileTurret')) {
+                            let target = _.filter(Actor.get('ship'),  (a: any) => a.isPlayer !== this.isPlayer);
+                            if (target.length > 0 && target[0].isAlive) {
+                                ps.missileTurret(this, target[0]);
+                            }
                         }
                         break;
                 }
@@ -192,7 +201,7 @@ function setPsCode() {
     ps.laser = function*(parent, size) {
         this.pos.set(parent.pos);
         this.isPlayer = parent.isPlayer;
-        this.vel.x = p.random(-size, size);
+        this.vel.x = p.random(-size * 2, size * 2);
         this.vel.y = parent.isPlayer ? -2 : 2;
         this.stroke = 'cyan';
         this.bsize = size;
@@ -201,11 +210,32 @@ function setPsCode() {
                 this.bsize *= 1.05;
                 this.width = this.bsize / 2;
                 this.height = this.bsize * 2;
-                this.vel.x *= 0.8;
+                this.vel.x *= 0.7;
                 this.vel.y *= 1.05;
             }}),
             new m.Move.ChaseOffset().set({target: parent, isVertical: false})
         ];       
+    }
+    ps.missileTurret = function*(parent, target){
+        this.isVisible = false;
+        this.isPlayer = parent.isPlayer;
+        ps.missile(parent, target);
+        yield 7;
+        ps.missile(parent, target);
+        yield 7;
+        ps.missile(parent, target);
+        yield 7;
+        this.remove();
+    }
+    ps.missile = function*(parent, target) {
+        this.pos.set(parent.pos);
+        this.isPlayer = parent.isPlayer;
+        this.vel.x = p.random(-2, 2);
+        this.stroke = 'green';
+        this.mechs = [
+            new m.Move.ChaseVel().set({target: target}),
+            new m.EndOfScreen.Remove()
+        ]
     }
 }
 export default setPsCode;

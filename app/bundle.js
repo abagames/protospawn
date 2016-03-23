@@ -45700,6 +45700,18 @@
 	            }
 	        }
 	        Move.ChaseOffset = ChaseOffset;
+	        class ChaseVel extends Mech {
+	            constructor(...args) {
+	                super(...args);
+	                this.verticalSpeed = 0.001;
+	                this.horizontalSpeed = 0.001;
+	            }
+	            update(a) {
+	                a.vel.x += (this.target.pos.x - a.pos.x) * this.verticalSpeed;
+	                a.vel.y += (this.target.pos.y - a.pos.y) * this.horizontalSpeed;
+	            }
+	        }
+	        Move.ChaseVel = ChaseVel;
 	        class LimitAngle extends Mech {
 	            constructor(...args) {
 	                super(...args);
@@ -46068,16 +46080,17 @@
 	        let button1Flip = new protospawn_1.mech.Random.Flip().set({ probability: 0.1 });
 	        let button2Flip = new protospawn_1.mech.Random.Flip().set({ toTrueProbability: 0.02, toFalseProbability: 0.1 });
 	        let fireAngle = this.isPlayer ? -protospawn_1.p5js.HALF_PI : protospawn_1.p5js.HALF_PI;
-	        let weaponType = protospawn_1.p5js.randomInt(0, 1);
+	        let weaponType = protospawn_1.p5js.randomInt(0, 2);
+	        let existsWeapon = (name) => _.some(actor_1.default.get(name), (a) => a.isPlayer === this.isPlayer);
 	        this.shield = 100;
 	        this.set({ size: 7, collisionSizeRatio: 0.7, mechs: [
-	                new protospawn_1.mech.Collision.Test().set({ name: ['bullet', 'explosion', 'laser'], do: (s, o) => {
+	                new protospawn_1.mech.Collision.Test().set({ name: ['bullet', 'explosion', 'laser', 'missile'], do: (s, o) => {
 	                        if (this.isPlayer === o.isPlayer) {
 	                            return;
 	                        }
-	                        let damage = { bullet: 20, explosion: 3, laser: 2 };
+	                        let damage = { bullet: 20, explosion: 3, laser: 2, missile: 10 };
 	                        s.shield -= damage[o.name];
-	                        if (o.name === 'bullet') {
+	                        if (o.name === 'bullet' || o.name === 'missile') {
 	                            o.remove();
 	                        }
 	                        if (s.shield <= 0) {
@@ -46102,15 +46115,18 @@
 	                            this.isButton1Down = button1Flip.value;
 	                            this.isButton2Down = button2Flip.value;
 	                        }
-	                        if (!this.isButton1Down && !this.isButton2Down && this.isNearBullet) {
+	                        if (!existsWeapon('exploder') &&
+	                            !existsWeapon('laserTurret') &&
+	                            !existsWeapon('missileTurret') &&
+	                            !this.isButton1Down && !this.isButton2Down && this.isNearBullet) {
 	                            changeAvatarSpeed(0.5);
 	                            barrier.isVisible = true;
 	                        }
 	                        else {
-	                            if (_.filter(actor_1.default.get('laserTurret'), (a) => a.isPlayer === this.isPlayer).length < 1) {
+	                            if (!existsWeapon('laserTurret')) {
 	                                changeAvatarSpeed(1);
-	                                barrier.isVisible = false;
 	                            }
+	                            barrier.isVisible = false;
 	                        }
 	                        this.isNearBullet = false;
 	                        if (this.isPlayer) {
@@ -46127,13 +46143,21 @@
 	                new protospawn_1.mech.Event.Resource().set({ cond: () => this.isButton2Down, do: () => {
 	                        switch (weaponType) {
 	                            case 0:
-	                                if (_.filter(actor_1.default.get('exploder'), (a) => a.isPlayer === this.isPlayer).length < 1) {
+	                                if (!existsWeapon('exploder')) {
 	                                    protospawn_1.protoSpawn.exploder({ pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer });
 	                                }
 	                                break;
 	                            case 1:
-	                                if (_.filter(actor_1.default.get('laserTurret'), (a) => a.isPlayer === this.isPlayer).length < 1) {
+	                                if (!existsWeapon('laserTurret')) {
 	                                    protospawn_1.protoSpawn.laserTurret(this, changeAvatarSpeed);
+	                                }
+	                                break;
+	                            case 2:
+	                                if (!existsWeapon('missileTurret')) {
+	                                    let target = _.filter(actor_1.default.get('ship'), (a) => a.isPlayer !== this.isPlayer);
+	                                    if (target.length > 0 && target[0].isAlive) {
+	                                        protospawn_1.protoSpawn.missileTurret(this, target[0]);
+	                                    }
 	                                }
 	                                break;
 	                        }
@@ -46239,7 +46263,7 @@
 	    protospawn_1.protoSpawn.laser = function* (parent, size) {
 	        this.pos.set(parent.pos);
 	        this.isPlayer = parent.isPlayer;
-	        this.vel.x = protospawn_1.p5js.random(-size, size);
+	        this.vel.x = protospawn_1.p5js.random(-size * 2, size * 2);
 	        this.vel.y = parent.isPlayer ? -2 : 2;
 	        this.stroke = 'cyan';
 	        this.bsize = size;
@@ -46248,10 +46272,31 @@
 	                    this.bsize *= 1.05;
 	                    this.width = this.bsize / 2;
 	                    this.height = this.bsize * 2;
-	                    this.vel.x *= 0.8;
+	                    this.vel.x *= 0.7;
 	                    this.vel.y *= 1.05;
 	                } }),
 	            new protospawn_1.mech.Move.ChaseOffset().set({ target: parent, isVertical: false })
+	        ];
+	    };
+	    protospawn_1.protoSpawn.missileTurret = function* (parent, target) {
+	        this.isVisible = false;
+	        this.isPlayer = parent.isPlayer;
+	        protospawn_1.protoSpawn.missile(parent, target);
+	        yield 7;
+	        protospawn_1.protoSpawn.missile(parent, target);
+	        yield 7;
+	        protospawn_1.protoSpawn.missile(parent, target);
+	        yield 7;
+	        this.remove();
+	    };
+	    protospawn_1.protoSpawn.missile = function* (parent, target) {
+	        this.pos.set(parent.pos);
+	        this.isPlayer = parent.isPlayer;
+	        this.vel.x = protospawn_1.p5js.random(-2, 2);
+	        this.stroke = 'green';
+	        this.mechs = [
+	            new protospawn_1.mech.Move.ChaseVel().set({ target: target }),
+	            new protospawn_1.mech.EndOfScreen.Remove()
 	        ];
 	    };
 	}
