@@ -46080,7 +46080,7 @@
 	        let button1Flip = new protospawn_1.mech.Random.Flip().set({ probability: 0.1 });
 	        let button2Flip = new protospawn_1.mech.Random.Flip().set({ toTrueProbability: 0.02, toFalseProbability: 0.1 });
 	        let fireAngle = this.isPlayer ? -protospawn_1.p5js.HALF_PI : protospawn_1.p5js.HALF_PI;
-	        let weaponType = protospawn_1.p5js.randomInt(0, 2);
+	        this.weaponType = protospawn_1.p5js.randomInt(0, 2);
 	        let existsWeapon = (name) => _.some(actor_1.default.get(name), (a) => a.isPlayer === this.isPlayer);
 	        this.shield = 100;
 	        this.set({ size: 7, collisionSizeRatio: 0.7, mechs: [
@@ -46141,7 +46141,7 @@
 	                        protospawn_1.protoSpawn.bullet({ pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer });
 	                    } }),
 	                new protospawn_1.mech.Event.Resource().set({ cond: () => this.isButton2Down, do: () => {
-	                        switch (weaponType) {
+	                        switch (this.weaponType) {
 	                            case 0:
 	                                if (!existsWeapon('exploder')) {
 	                                    protospawn_1.protoSpawn.exploder({ pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer });
@@ -46168,6 +46168,8 @@
 	            this.mechs = this.mechs.concat([
 	                avatarMoveDirection,
 	                new protospawn_1.mech.EndOfScreen.Clamp(),
+	                new protospawn_1.mech.AvatarInput.KeyPressed().set({ key: protospawn_1.p5js.Key.button3,
+	                    do: () => this.weaponType = protospawn_1.p5js.wrap(this.weaponType + 1, 0, 3) })
 	            ]);
 	        }
 	        else {

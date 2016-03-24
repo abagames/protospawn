@@ -23,7 +23,7 @@ function setPsCode() {
         let button1Flip = new m.Random.Flip().set({probability: 0.1});
         let button2Flip = new m.Random.Flip().set({toTrueProbability: 0.02, toFalseProbability: 0.1});
         let fireAngle = this.isPlayer ? -p.HALF_PI : p.HALF_PI;
-        let weaponType = p.randomInt(0, 2);
+        this.weaponType = p.randomInt(0, 2);
         let existsWeapon = (name) => _.some(Actor.get(name), (a: any) => a.isPlayer === this.isPlayer);
         this.shield = 100;
         this.set({size: 7, collisionSizeRatio: 0.7, mechs: [
@@ -80,7 +80,7 @@ function setPsCode() {
                 ps.bullet({pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer});
             }}),
             new m.Event.Resource().set({cond: () => this.isButton2Down, do: () => {
-                switch (weaponType) {
+                switch (this.weaponType) {
                     case 0:
                         if (!existsWeapon('exploder')) {
                             ps.exploder({pos: this.pos, angle: fireAngle, isPlayer: this.isPlayer});
@@ -107,6 +107,8 @@ function setPsCode() {
             this.mechs = this.mechs.concat([
                 avatarMoveDirection,
                 new m.EndOfScreen.Clamp(),
+                new m.AvatarInput.KeyPressed().set({key: p.Key.button3,
+                    do: () => this.weaponType = p.wrap(this.weaponType + 1, 0, 3)})
             ]);
         } else {
             this.pos.x = p.random(10, 90);
