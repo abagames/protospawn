@@ -51,7 +51,7 @@ function setPsCode() {
             new m.Event.Frame().set({do: () => {
                 if (this.isPlayer) {
                     this.isButton1Down = p.isKeyDown(p.Key.button1);
-                    this.isButton2Down = p.isKeyDown(p.Key.button2);
+                    this.isButton2Down = p.isKeyDown(p.Key.button2) || p.isKeyDown(p.Key.button3);
                 } else {
                     this.isButton1Down = button1Flip.value;
                     this.isButton2Down = button2Flip.value;
@@ -232,7 +232,7 @@ function setPsCode() {
     ps.missile = function*(parent, target) {
         this.pos.set(parent.pos);
         this.isPlayer = parent.isPlayer;
-        this.vel.x = p.random(-2, 2);
+        this.vel.x = p.random(-1, 1);
         this.stroke = 'green';
         this.mechs = [
             new m.Move.ChaseVel().set({target: target}),
