@@ -46109,7 +46109,7 @@
 	                new protospawn_1.mech.Event.Frame().set({ do: () => {
 	                        if (this.isPlayer) {
 	                            this.isButton1Down = protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button1);
-	                            this.isButton2Down = protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button2);
+	                            this.isButton2Down = protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button2) || protospawn_1.p5js.isKeyDown(protospawn_1.p5js.Key.button3);
 	                        }
 	                        else {
 	                            this.isButton1Down = button1Flip.value;
@@ -46294,7 +46294,7 @@
 	    protospawn_1.protoSpawn.missile = function* (parent, target) {
 	        this.pos.set(parent.pos);
 	        this.isPlayer = parent.isPlayer;
-	        this.vel.x = protospawn_1.p5js.random(-2, 2);
+	        this.vel.x = protospawn_1.p5js.random(-1, 1);
 	        this.stroke = 'green';
 	        this.mechs = [
 	            new protospawn_1.mech.Move.ChaseVel().set({ target: target }),
